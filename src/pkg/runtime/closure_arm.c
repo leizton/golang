@@ -43,24 +43,24 @@ vars:		WORD	arg0
 		WORD	arg2
 */
 
-extern void runtime·cacheflush(byte* start, byte* end);
+extern void runtime_cacheflush(byte* start, byte* end);
 
 #pragma textflag 7
 void
-runtime·closure(int32 siz, byte *fn, byte *arg0)
+runtime_closure(int32 siz, byte *fn, byte *arg0)
 {
 	byte *p, *q, **ret;
 	uint32 *pc;
 	int32 n;
 
 	if(siz < 0 || siz%4 != 0)
-		runtime·throw("bad closure size");
+		runtime_throw("bad closure size");
 
 	ret = (byte**)((byte*)&arg0 + siz);
 
 	if(siz > 100) {
 		// TODO(kaib): implement stack growth preamble?
-		runtime·throw("closure too big");
+		runtime_throw("closure too big");
 	}
 
 	// size of new fn.
@@ -73,7 +73,7 @@ runtime·closure(int32 siz, byte *fn, byte *arg0)
 	// store args aligned after code, so gc can find them.
 	n += siz;
 
-	p = runtime·mal(n);
+	p = runtime_mal(n);
 	*ret = p;
 	q = p + n - siz;
 
@@ -83,7 +83,7 @@ runtime·closure(int32 siz, byte *fn, byte *arg0)
 	*pc++ = 0xe52de000 | (siz + 4);
 
 	if(siz > 0) {
-		runtime·memmove(q, (byte*)&arg0, siz);
+		runtime_memmove(q, (byte*)&arg0, siz);
 
 		//	MOVW	$vars(PC), R0
 		*pc = 0xe28f0000 | (int32)(q - (byte*)pc - 8);
@@ -122,8 +122,8 @@ runtime·closure(int32 siz, byte *fn, byte *arg0)
 	p = (byte*)pc;
 
 	if(p > q)
-		runtime·throw("bad math in sys.closure");
+		runtime_throw("bad math in sys.closure");
 
-	runtime·cacheflush(*ret, q+siz);
+	runtime_cacheflush(*ret, q+siz);
 }
 

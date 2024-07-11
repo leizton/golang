@@ -6,7 +6,7 @@
  * Cgo interface.
  */
 
-void runtime·cgocall(void (*fn)(void*), void*);
-void runtime·cgocallback(void (*fn)(void), void*, uintptr);
-void *runtime·cmalloc(uintptr);
-void runtime·cfree(void*);
+void runtime_cgocall(void (*fn)(void*), void*);
+void runtime_cgocallback(void (*fn)(void), void*, uintptr);
+void *runtime_cmalloc(uintptr);
+void runtime_cfree(void*);

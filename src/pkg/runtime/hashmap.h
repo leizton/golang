@@ -63,12 +63,12 @@
 	}
  */
 
-#define	malloc		runtime·mal
-#define	memset(a,b,c)	runtime·memclr((byte*)(a), (uint32)(c))
-#define	memcpy(a,b,c)	runtime·memmove((byte*)(a),(byte*)(b),(uint32)(c))
-#define	assert(a)	if(!(a)) runtime·throw("hashmap assert")
-#define free(x)	runtime·free(x)
-#define memmove(a,b,c)	runtime·memmove(a, b, c)
+#define	malloc		runtime_mal
+#define	memset(a,b,c)	runtime_memclr((byte*)(a), (uint32)(c))
+#define	memcpy(a,b,c)	runtime_memmove((byte*)(a),(byte*)(b),(uint32)(c))
+#define	assert(a)	if(!(a)) runtime_throw("hashmap assert")
+#define free(x)	runtime_free(x)
+#define memmove(a,b,c)	runtime_memmove(a, b, c)
 
 struct Hmap;		/* opaque */
 struct hash_subtable;	/* opaque */

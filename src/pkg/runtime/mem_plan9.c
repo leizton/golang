@@ -17,27 +17,27 @@ enum
 };
 
 void*
-runtime·SysAlloc(uintptr nbytes)
+runtime_SysAlloc(uintptr nbytes)
 {
 	uintptr bl;
 	
-	runtime·lock(&memlock);
+	runtime_lock(&memlock);
 	mstats.sys += nbytes;
 	// Plan 9 sbrk from /sys/src/libc/9sys/sbrk.c
 	bl = ((uintptr)bloc + Round) & ~Round;
-	if(runtime·brk_((void*)(bl + nbytes)) < 0) {
-		runtime·unlock(&memlock);
+	if(runtime_brk_((void*)(bl + nbytes)) < 0) {
+		runtime_unlock(&memlock);
 		return nil;
 	}
 	bloc = (byte*)bl + nbytes;
-	runtime·unlock(&memlock);
+	runtime_unlock(&memlock);
 	return (void*)bl;
 }
 
 void
-runtime·SysFree(void *v, uintptr nbytes)
+runtime_SysFree(void *v, uintptr nbytes)
 {
-	runtime·lock(&memlock);
+	runtime_lock(&memlock);
 	mstats.sys -= nbytes;
 	// from tiny/mem.c
 	// Push pointer back if this is a free
@@ -45,24 +45,24 @@ runtime·SysFree(void *v, uintptr nbytes)
 	nbytes += (nbytes + Round) & ~Round;
 	if(bloc == (byte*)v+nbytes)
 		bloc -= nbytes;	
-	runtime·unlock(&memlock);
+	runtime_unlock(&memlock);
 }
 
 void
-runtime·SysUnused(void *v, uintptr nbytes)
+runtime_SysUnused(void *v, uintptr nbytes)
 {
 	USED(v, nbytes);
 }
 
 void
-runtime·SysMap(void *v, uintptr nbytes)
+runtime_SysMap(void *v, uintptr nbytes)
 {
 	USED(v, nbytes);
 }
 
 void*
-runtime·SysReserve(void *v, uintptr nbytes)
+runtime_SysReserve(void *v, uintptr nbytes)
 {
 	USED(v);
-	return runtime·SysAlloc(nbytes);
+	return runtime_SysAlloc(nbytes);
 }

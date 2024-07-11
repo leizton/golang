@@ -26,7 +26,7 @@ static	Callbacks	cbs;
 
 // Call back from windows dll into go.
 byte *
-runtime·compilecallback(Eface fn, bool /*cleanstack*/)
+runtime_compilecallback(Eface fn, bool /*cleanstack*/)
 {
 	FuncType *ft;
 	Type *t;
@@ -35,17 +35,17 @@ runtime·compilecallback(Eface fn, bool /*cleanstack*/)
 	Callback *c;
 
 	if(fn.type == nil || fn.type->kind != KindFunc)
-		runtime·panicstring("compilecallback: not a function");
+		runtime_panicstring("compilecallback: not a function");
 	ft = (FuncType*)fn.type;
 	if(ft->out.len != 1)
-		runtime·panicstring("compilecallback: function must have one output parameter");
+		runtime_panicstring("compilecallback: function must have one output parameter");
 	if(((Type**)ft->out.array)[0]->size != sizeof(uintptr))
-		runtime·panicstring("compilecallback: output parameter size is wrong");
+		runtime_panicstring("compilecallback: output parameter size is wrong");
 	argsize = 0;
 	for(i=0; i<ft->in.len; i++) {
 		t = ((Type**)ft->in.array)[i];
 		if(t->size > sizeof(uintptr))
-			runtime·panicstring("compilecallback: input parameter size is wrong");
+			runtime_panicstring("compilecallback: input parameter size is wrong");
 		argsize += sizeof(uintptr);
 	}
 
@@ -56,21 +56,21 @@ runtime·compilecallback(Eface fn, bool /*cleanstack*/)
 	n += 2+8;   // MOVQ callbackasm, AX
 	n += 2;     // JMP  AX
 
-	runtime·lock(&cbs);
+	runtime_lock(&cbs);
 	for(c = cbs.link; c != nil; c = c->link) {
 		if(c->gobody == fn.data) {
-			runtime·unlock(&cbs);
+			runtime_unlock(&cbs);
 			return &c->asmbody;
 		}
 	}
 	if(cbs.n >= 2000)
-		runtime·throw("too many callback functions");
-	c = runtime·mal(sizeof *c + n);
+		runtime_throw("too many callback functions");
+	c = runtime_mal(sizeof *c + n);
 	c->gobody = fn.data;
 	c->link = cbs.link;
 	cbs.link = c;
 	cbs.n++;
-	runtime·unlock(&cbs);
+	runtime_unlock(&cbs);
 
 	p = &c->asmbody;
 
@@ -93,7 +93,7 @@ runtime·compilecallback(Eface fn, bool /*cleanstack*/)
 	// MOVQ callbackasm, AX
 	*p++ = 0x48;
 	*p++ = 0xb8;
-	*(uint64*)p = (uint64)runtime·callbackasm;
+	*(uint64*)p = (uint64)runtime_callbackasm;
 	p += 8;
 
 	// JMP AX

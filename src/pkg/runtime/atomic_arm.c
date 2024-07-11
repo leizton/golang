@@ -7,34 +7,34 @@
 // Atomic add and return new value.
 #pragma textflag 7
 uint32
-runtime·xadd(uint32 volatile *val, int32 delta)
+runtime_xadd(uint32 volatile *val, int32 delta)
 {
 	uint32 oval, nval;
 
 	for(;;){
 		oval = *val;
 		nval = oval + delta;
-		if(runtime·cas(val, oval, nval))
+		if(runtime_cas(val, oval, nval))
 			return nval;
 	}
 }
 
 #pragma textflag 7
 uint32
-runtime·xchg(uint32 volatile* addr, uint32 v)
+runtime_xchg(uint32 volatile* addr, uint32 v)
 {
 	uint32 old;
 
 	for(;;) {
 		old = *addr;
-		if(runtime·cas(addr, old, v))
+		if(runtime_cas(addr, old, v))
 			return old;
 	}
 }
 
 #pragma textflag 7
 void
-runtime·procyield(uint32 cnt)
+runtime_procyield(uint32 cnt)
 {
 	uint32 volatile i;
 
@@ -44,40 +44,40 @@ runtime·procyield(uint32 cnt)
 
 #pragma textflag 7
 uint32
-runtime·atomicload(uint32 volatile* addr)
+runtime_atomicload(uint32 volatile* addr)
 {
-	return runtime·xadd(addr, 0);
+	return runtime_xadd(addr, 0);
 }
 
 #pragma textflag 7
 void*
-runtime·atomicloadp(void* volatile* addr)
+runtime_atomicloadp(void* volatile* addr)
 {
-	return (void*)runtime·xadd((uint32 volatile*)addr, 0);
+	return (void*)runtime_xadd((uint32 volatile*)addr, 0);
 }
 
 #pragma textflag 7
 void
-runtime·atomicstorep(void* volatile* addr, void* v)
+runtime_atomicstorep(void* volatile* addr, void* v)
 {
 	void *old;
 
 	for(;;) {
 		old = *addr;
-		if(runtime·casp(addr, old, v))
+		if(runtime_casp(addr, old, v))
 			return;
 	}
 }
 
 #pragma textflag 7
 void
-runtime·atomicstore(uint32 volatile* addr, uint32 v)
+runtime_atomicstore(uint32 volatile* addr, uint32 v)
 {
 	uint32 old;
 	
 	for(;;) {
 		old = *addr;
-		if(runtime·cas(addr, old, v))
+		if(runtime_cas(addr, old, v))
 			return;
 	}
 }

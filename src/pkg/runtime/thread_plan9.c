@@ -9,7 +9,7 @@
 int8 *goos = "plan9";
 
 void
-runtime·minit(void)
+runtime_minit(void)
 {
 }
 
@@ -19,12 +19,12 @@ getproccount(void)
 	int32 fd, i, n, ncpu;
 	byte buf[2048];
 
-	fd = runtime·open((byte*)"/dev/sysstat", OREAD);
+	fd = runtime_open((byte*)"/dev/sysstat", OREAD);
 	if(fd < 0)
 		return 1;
 	ncpu = 0;
 	for(;;) {
-		n = runtime·read(fd, buf, sizeof buf);
+		n = runtime_read(fd, buf, sizeof buf);
 		if(n <= 0)
 			break;
 		for(i = 0; i < n; i++) {
@@ -32,45 +32,45 @@ getproccount(void)
 				ncpu++;
 		}
 	}
-	runtime·close(fd);
+	runtime_close(fd);
 	return ncpu > 0 ? ncpu : 1;
 }
 
 void
-runtime·osinit(void)
+runtime_osinit(void)
 {
-	runtime·ncpu = getproccount();
+	runtime_ncpu = getproccount();
 }
 
 void
-runtime·goenvs(void)
-{
-}
-
-void
-runtime·initsig(void)
+runtime_goenvs(void)
 {
 }
 
 void
-runtime·osyield(void)
+runtime_initsig(void)
 {
-	runtime·sleep(0);
 }
 
 void
-runtime·usleep(uint32 µs)
+runtime_osyield(void)
+{
+	runtime_sleep(0);
+}
+
+void
+runtime_usleep(uint32 µs)
 {
 	uint32 ms;
 
 	ms = µs/1000;
 	if(ms == 0)
 		ms = 1;
-	runtime·sleep(ms);
+	runtime_sleep(ms);
 }
 
 int64
-runtime·nanotime(void)
+runtime_nanotime(void)
 {
 	static int32 fd = -1;
 	byte b[8];
@@ -88,9 +88,9 @@ runtime·nanotime(void)
 	// file descriptor) is roughly four times slower
 	// in 9vx on a 2.16 GHz Intel Core 2 Duo.
 
-	if(fd < 0 && (fd = runtime·open((byte*)"/dev/bintime", OREAD|OCEXEC)) < 0)
+	if(fd < 0 && (fd = runtime_open((byte*)"/dev/bintime", OREAD|OCEXEC)) < 0)
 		return 0;
-	if(runtime·pread(fd, b, sizeof b, 0) != sizeof b)
+	if(runtime_pread(fd, b, sizeof b, 0) != sizeof b)
 		return 0;
 	hi = b[0]<<24 | b[1]<<16 | b[2]<<8 | b[3];
 	lo = b[4]<<24 | b[5]<<16 | b[6]<<8 | b[7];
@@ -98,11 +98,11 @@ runtime·nanotime(void)
 }
 
 void
-time·now(int64 sec, int32 nsec)
+time_now(int64 sec, int32 nsec)
 {
 	int64 ns;
 
-	ns = runtime·nanotime();
+	ns = runtime_nanotime();
 	sec = ns / 1000000000LL;
 	nsec = ns - sec * 1000000000LL;
 	FLUSH(&sec);
@@ -111,7 +111,7 @@ time·now(int64 sec, int32 nsec)
 
 extern Tos *_tos;
 void
-runtime·exit(int32)
+runtime_exit(int32)
 {
 	int32 fd;
 	uint8 buf[128];
@@ -119,8 +119,8 @@ runtime·exit(int32)
 	uint8 *p, *q;
 	int32 pid;
 
-	runtime·memclr(buf, sizeof buf);
-	runtime·memclr(tmp, sizeof tmp);
+	runtime_memclr(buf, sizeof buf);
+	runtime_memclr(tmp, sizeof tmp);
 	pid = _tos->pid;
 
 	/* build path string /proc/pid/notepg */
@@ -129,39 +129,39 @@ runtime·exit(int32)
 		pid = pid/10;
 	}
 	p = buf;
-	runtime·memmove((void*)p, (void*)"/proc/", 6);
+	runtime_memmove((void*)p, (void*)"/proc/", 6);
 	p += 6;
 	for(q--; q >= tmp;)
 		*p++ = *q--;
-	runtime·memmove((void*)p, (void*)"/notepg", 7);
+	runtime_memmove((void*)p, (void*)"/notepg", 7);
 
 	/* post interrupt note */
-	fd = runtime·open(buf, OWRITE);
-	runtime·write(fd, "interrupt", 9);
-	runtime·exits(nil);
+	fd = runtime_open(buf, OWRITE);
+	runtime_write(fd, "interrupt", 9);
+	runtime_exits(nil);
 }
 
 void
-runtime·newosproc(M *m, G *g, void *stk, void (*fn)(void))
+runtime_newosproc(M *m, G *g, void *stk, void (*fn)(void))
 {
 	m->tls[0] = m->id;	// so 386 asm can find it
 	if(0){
-		runtime·printf("newosproc stk=%p m=%p g=%p fn=%p rfork=%p id=%d/%d ostk=%p\n",
-			stk, m, g, fn, runtime·rfork, m->id, m->tls[0], &m);
+		runtime_printf("newosproc stk=%p m=%p g=%p fn=%p rfork=%p id=%d/%d ostk=%p\n",
+			stk, m, g, fn, runtime_rfork, m->id, m->tls[0], &m);
 	}
 
-	if(runtime·rfork(RFPROC|RFMEM|RFNOWAIT, stk, m, g, fn) < 0)
-		runtime·throw("newosproc: rfork failed");
+	if(runtime_rfork(RFPROC|RFMEM|RFNOWAIT, stk, m, g, fn) < 0)
+		runtime_throw("newosproc: rfork failed");
 }
 
 uintptr
-runtime·semacreate(void)
+runtime_semacreate(void)
 {
 	return 1;
 }
 
 int32
-runtime·semasleep(int64 ns)
+runtime_semasleep(int64 ns)
 {
 	int32 ret;
 	int32 ms;
@@ -179,7 +179,7 @@ runtime·semasleep(int64 ns)
 		// If a negative time indicates no timeout, then
 		// semacquire can be implemented (in the kernel)
 		// as tsemacquire(p, v, -1).
-		runtime·throw("semasleep: timed sleep not implemented on Plan 9");
+		runtime_throw("semasleep: timed sleep not implemented on Plan 9");
 
 		/*
 		if(ns < 0)
@@ -188,29 +188,29 @@ runtime·semasleep(int64 ns)
 			ms = 0x7fffffff;
 		else
 			ms = ns/1000;
-		ret = runtime·plan9_tsemacquire(&m->waitsemacount, 1, ms);
+		ret = runtime_plan9_tsemacquire(&m->waitsemacount, 1, ms);
 		if(ret == 1)
 			return 0;  // success
 		return -1;  // timeout or interrupted
 		*/
 	}
 
-	while(runtime·plan9_semacquire(&m->waitsemacount, 1) < 0) {
+	while(runtime_plan9_semacquire(&m->waitsemacount, 1) < 0) {
 		/* interrupted; try again */
 	}
 	return 0;  // success
 }
 
 void
-runtime·semawakeup(M *mp)
+runtime_semawakeup(M *mp)
 {
-	runtime·plan9_semrelease(&mp->waitsemacount, 1);
+	runtime_plan9_semrelease(&mp->waitsemacount, 1);
 }
 
 void
-os·sigpipe(void)
+os_sigpipe(void)
 {
-	runtime·throw("too many writes on closed pipe");
+	runtime_throw("too many writes on closed pipe");
 }
 
 /*
@@ -220,30 +220,30 @@ os·sigpipe(void)
  * traceback.
  */
 void
-runtime·sigpanic(void)
+runtime_sigpanic(void)
 {
 }
 
 int32
-runtime·read(int32 fd, void *buf, int32 nbytes)
+runtime_read(int32 fd, void *buf, int32 nbytes)
 {
-	return runtime·pread(fd, buf, nbytes, -1LL);
+	return runtime_pread(fd, buf, nbytes, -1LL);
 }
 
 int32
-runtime·write(int32 fd, void *buf, int32 nbytes)
+runtime_write(int32 fd, void *buf, int32 nbytes)
 {
-	return runtime·pwrite(fd, buf, nbytes, -1LL);
+	return runtime_pwrite(fd, buf, nbytes, -1LL);
 }
 
 uintptr
-runtime·memlimit(void)
+runtime_memlimit(void)
 {
 	return 0;
 }
 
 void
-runtime·setprof(bool on)
+runtime_setprof(bool on)
 {
 	USED(on);
 }
@@ -253,9 +253,9 @@ static int8 badcallback[] = "runtime: cgo callback on thread not created by Go.\
 // This runs on a foreign stack, without an m or a g.  No stack split.
 #pragma textflag 7
 void
-runtime·badcallback(void)
+runtime_badcallback(void)
 {
-	runtime·pwrite(2, badcallback, sizeof badcallback - 1, -1LL);
+	runtime_pwrite(2, badcallback, sizeof badcallback - 1, -1LL);
 }
 
 static int8 badsignal[] = "runtime: signal received on thread not created by Go.\n";
@@ -263,7 +263,7 @@ static int8 badsignal[] = "runtime: signal received on thread not created by Go.
 // This runs on a foreign stack, without an m or a g.  No stack split.
 #pragma textflag 7
 void
-runtime·badsignal(void)
+runtime_badsignal(void)
 {
-	runtime·pwrite(2, badsignal, sizeof badsignal - 1, -1LL);
+	runtime_pwrite(2, badsignal, sizeof badsignal - 1, -1LL);
 }

@@ -8,7 +8,7 @@
 
 typedef char bool;
 
-bool runtime·lockedOSThread(void);
+bool runtime_lockedOSThread(void);
 
 static void
 FLUSH(void*)
@@ -16,8 +16,8 @@ FLUSH(void*)
 }
 
 void
-·LockedOSThread(bool b)
+_LockedOSThread(bool b)
 {
-	b = runtime·lockedOSThread();
+	b = runtime_lockedOSThread();
 	FLUSH(&b);
 }

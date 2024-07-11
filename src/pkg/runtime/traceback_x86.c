@@ -9,11 +9,11 @@
 #include "malloc.h"
 
 static uintptr isclosureentry(uintptr);
-void runtime·deferproc(void);
-void runtime·newproc(void);
-void runtime·newstack(void);
-void runtime·morestack(void);
-void runtime·sigpanic(void);
+void runtime_deferproc(void);
+void runtime_newproc(void);
+void runtime_newstack(void);
+void runtime_morestack(void);
+void runtime_sigpanic(void);
 
 // This code is also used for the 386 tracebacks.
 // Use uintptr for an appropriate word-sized integer.
@@ -23,7 +23,7 @@ void runtime·sigpanic(void);
 // A little clunky to merge the two but avoids duplicating
 // the code and all its subtlety.
 int32
-runtime·gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr *pcbuf, int32 max)
+runtime_gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr *pcbuf, int32 max)
 {
 	byte *p;
 	int32 i, n, iter, sawnewstack;
@@ -40,7 +40,7 @@ runtime·gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr 
 	waspanic = false;
 	
 	// If the PC is goexit, the goroutine hasn't started yet.
-	if(pc0 == g->sched.pc && sp == g->sched.sp && pc0 == (byte*)runtime·goexit) {
+	if(pc0 == g->sched.pc && sp == g->sched.sp && pc0 == (byte*)runtime_goexit) {
 		fp = sp;
 		lr = pc;
 		pc = (uintptr)g->entry;
@@ -71,25 +71,25 @@ runtime·gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr 
 		//	stk is the stack containing sp.
 		//	The caller's program counter is lr, unless lr is zero, in which case it is *(uintptr*)sp.
 	
-		if(pc == (uintptr)runtime·lessstack) {
+		if(pc == (uintptr)runtime_lessstack) {
 			// Hit top of stack segment.  Unwind to next segment.
 			pc = (uintptr)stk->gobuf.pc;
 			sp = stk->gobuf.sp;
 			lr = 0;
 			fp = nil;
 			if(pcbuf == nil)
-				runtime·printf("----- stack segment boundary -----\n");
+				runtime_printf("----- stack segment boundary -----\n");
 			stk = (Stktop*)stk->stackbase;
 			continue;
 		}
-		if(pc <= 0x1000 || (f = runtime·findfunc(pc)) == nil) {
+		if(pc <= 0x1000 || (f = runtime_findfunc(pc)) == nil) {
 			// Dangerous, but worthwhile: see if this is a closure:
 			//	ADDQ $wwxxyyzz, SP; RET
 			//	[48] 81 c4 zz yy xx ww c3
 			// The 0x48 byte is only on amd64.
 			p = (byte*)pc;
 			// We check p < p+8 to avoid wrapping and faulting if we lose track.
-			if(runtime·mheap.arena_start < p && p < p+8 && p+8 < runtime·mheap.arena_used &&  // pointer in allocated memory
+			if(runtime_mheap.arena_start < p && p < p+8 && p+8 < runtime_mheap.arena_used &&  // pointer in allocated memory
 			   (sizeof(uintptr) != 8 || *p++ == 0x48) &&  // skip 0x48 byte on amd64
 			   p[0] == 0x81 && p[1] == 0xc4 && p[6] == 0xc3) {
 				sp += *(uint32*)(p+2);
@@ -101,7 +101,7 @@ runtime·gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr 
 			}
 			
 			// Closure at top of stack, not yet started.
-			if(lr == (uintptr)runtime·goexit && (pc = isclosureentry(pc)) != 0) {
+			if(lr == (uintptr)runtime_goexit && (pc = isclosureentry(pc)) != 0) {
 				fp = sp;
 				continue;
 			}
@@ -126,7 +126,7 @@ runtime·gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr 
 		else if(pcbuf != nil)
 			pcbuf[n++] = pc;
 		else {
-			if(runtime·showframe(f)) {
+			if(runtime_showframe(f)) {
 				// Print during crash.
 				//	main(0x1, 0x2, 0x3)
 				//		/home/rsc/go/src/runtime/x.go:23 +0xf
@@ -134,38 +134,38 @@ runtime·gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr 
 				tracepc = pc;	// back up to CALL instruction for funcline.
 				if(n > 0 && pc > f->entry && !waspanic)
 					tracepc--;
-				runtime·printf("%S(", f->name);
+				runtime_printf("%S(", f->name);
 				for(i = 0; i < f->args; i++) {
 					if(i != 0)
-						runtime·prints(", ");
-					runtime·printhex(((uintptr*)fp)[i]);
+						runtime_prints(", ");
+					runtime_printhex(((uintptr*)fp)[i]);
 					if(i >= 4) {
-						runtime·prints(", ...");
+						runtime_prints(", ...");
 						break;
 					}
 				}
-				runtime·prints(")\n");
-				runtime·printf("\t%S:%d", f->src, runtime·funcline(f, tracepc));
+				runtime_prints(")\n");
+				runtime_printf("\t%S:%d", f->src, runtime_funcline(f, tracepc));
 				if(pc > f->entry)
-					runtime·printf(" +%p", (uintptr)(pc - f->entry));
-				runtime·printf("\n");
+					runtime_printf(" +%p", (uintptr)(pc - f->entry));
+				runtime_printf("\n");
 			}
 			n++;
 		}
 		
-		waspanic = f->entry == (uintptr)runtime·sigpanic;
+		waspanic = f->entry == (uintptr)runtime_sigpanic;
 
-		if(f->entry == (uintptr)runtime·deferproc || f->entry == (uintptr)runtime·newproc)
+		if(f->entry == (uintptr)runtime_deferproc || f->entry == (uintptr)runtime_newproc)
 			fp += 2*sizeof(uintptr);
 
-		if(f->entry == (uintptr)runtime·newstack)
+		if(f->entry == (uintptr)runtime_newstack)
 			sawnewstack = 1;
 
-		if(pcbuf == nil && f->entry == (uintptr)runtime·morestack && g == m->g0 && sawnewstack) {
+		if(pcbuf == nil && f->entry == (uintptr)runtime_morestack && g == m->g0 && sawnewstack) {
 			// The fact that we saw newstack means that morestack
 			// has managed to record its information in m, so we can
 			// use it to keep unwinding the stack.
-			runtime·printf("----- morestack called from goroutine %d -----\n", m->curg->goid);
+			runtime_printf("----- morestack called from goroutine %d -----\n", m->curg->goid);
 			pc = (uintptr)m->morepc;
 			sp = m->morebuf.sp - sizeof(void*);
 			lr = (uintptr)m->morebuf.pc;
@@ -176,9 +176,9 @@ runtime·gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr 
 			continue;
 		}
 
-		if(pcbuf == nil && f->entry == (uintptr)runtime·lessstack && g == m->g0) {
+		if(pcbuf == nil && f->entry == (uintptr)runtime_lessstack && g == m->g0) {
 			// Lessstack is running on scheduler stack.  Switch to original goroutine.
-			runtime·printf("----- lessstack called from goroutine %d -----\n", m->curg->goid);
+			runtime_printf("----- lessstack called from goroutine %d -----\n", m->curg->goid);
 			g = m->curg;
 			stk = (Stktop*)g->stackbase;
 			sp = stk->gobuf.sp;
@@ -196,36 +196,36 @@ runtime·gentraceback(byte *pc0, byte *sp, byte *lr0, G *g, int32 skip, uintptr 
 	}
 	
 	// Show what created goroutine, except main goroutine (goid 1).
-	if(pcbuf == nil && (pc = g->gopc) != 0 && (f = runtime·findfunc(pc)) != nil && g->goid != 1) {
-		runtime·printf("created by %S\n", f->name);
+	if(pcbuf == nil && (pc = g->gopc) != 0 && (f = runtime_findfunc(pc)) != nil && g->goid != 1) {
+		runtime_printf("created by %S\n", f->name);
 		tracepc = pc;	// back up to CALL instruction for funcline.
 		if(n > 0 && pc > f->entry)
 			tracepc--;
-		runtime·printf("\t%S:%d", f->src, runtime·funcline(f, tracepc));
+		runtime_printf("\t%S:%d", f->src, runtime_funcline(f, tracepc));
 		if(pc > f->entry)
-			runtime·printf(" +%p", (uintptr)(pc - f->entry));
-		runtime·printf("\n");
+			runtime_printf(" +%p", (uintptr)(pc - f->entry));
+		runtime_printf("\n");
 	}
 		
 	return n;
 }
 
 void
-runtime·traceback(byte *pc0, byte *sp, byte*, G *g)
+runtime_traceback(byte *pc0, byte *sp, byte*, G *g)
 {
-	runtime·gentraceback(pc0, sp, nil, g, 0, nil, 100);
+	runtime_gentraceback(pc0, sp, nil, g, 0, nil, 100);
 }
 
 int32
-runtime·callers(int32 skip, uintptr *pcbuf, int32 m)
+runtime_callers(int32 skip, uintptr *pcbuf, int32 m)
 {
 	byte *pc, *sp;
 
 	// our caller's pc, sp.
 	sp = (byte*)&skip;
-	pc = runtime·getcallerpc(&skip);
+	pc = runtime_getcallerpc(&skip);
 
-	return runtime·gentraceback(pc, sp, nil, g, skip, pcbuf, m);
+	return runtime_gentraceback(pc, sp, nil, g, skip, pcbuf, m);
 }
 
 static uintptr
@@ -235,7 +235,7 @@ isclosureentry(uintptr pc)
 	int32 i, siz;
 	
 	p = (byte*)pc;
-	if(p < runtime·mheap.arena_start || p+32 > runtime·mheap.arena_used)
+	if(p < runtime_mheap.arena_start || p+32 > runtime_mheap.arena_used)
 		return 0;
 
 	if(*p == 0xe8) {

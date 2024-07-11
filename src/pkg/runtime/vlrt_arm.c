@@ -24,7 +24,7 @@
 // THE SOFTWARE.
 
 // declared here to avoid include of runtime.h
-void	runtime·panicstring(char*);
+void	runtime_panicstring(char*);
 
 typedef unsigned long   ulong;
 typedef unsigned int    uint;
@@ -35,9 +35,9 @@ typedef signed char     schar;
 #define SIGN(n) (1UL<<(n-1))
 
 void
-runtime·panicdivide(void)
+runtime_panicdivide(void)
 {
-	runtime·panicstring("integer divide by zero");
+	runtime_panicstring("integer divide by zero");
 }
 
 typedef struct  Vlong   Vlong;
@@ -60,7 +60,7 @@ struct  Vlong
 	};
 };
 
-void    runtime·abort(void);
+void    runtime_abort(void);
 
 void
 _addv(Vlong *r, Vlong a, Vlong b)
@@ -151,13 +151,13 @@ _f2v(Vlong *y, float f)
 }
 
 void
-runtime·float64toint64(double d, Vlong y)
+runtime_float64toint64(double d, Vlong y)
 {
 	_d2v(&y, d);
 }
 
 void
-runtime·float64touint64(double d, Vlong y)
+runtime_float64touint64(double d, Vlong y)
 {
 	_d2v(&y, d);
 }
@@ -194,14 +194,14 @@ _v2f(Vlong x)
 }
 
 void
-runtime·int64tofloat64(Vlong y, double d)
+runtime_int64tofloat64(Vlong y, double d)
 {
 	d = _v2d(y);
 	USED(&d); // FLUSH
 }
 
 void
-runtime·uint64tofloat64(Vlong y, double d)
+runtime_uint64tofloat64(Vlong y, double d)
 {
 	d = _ul2d(y.hi)*4294967296. + _ul2d(y.lo);
 	USED(&d); // FLUSH
@@ -222,7 +222,7 @@ dodiv(Vlong num, Vlong den, Vlong *q, Vlong *r)
 	 * get a divide by zero
 	 */
 	if(denlo==0 && denhi==0) {
-		runtime·panicdivide();
+		runtime_panicdivide();
 	}
 
 	/*
@@ -282,7 +282,7 @@ _divvu(Vlong *q, Vlong n, Vlong d)
 }
 
 void
-runtime·uint64div(Vlong n, Vlong d, Vlong q)
+runtime_uint64div(Vlong n, Vlong d, Vlong q)
 {
 	_divvu(&q, n, d);
 }
@@ -300,7 +300,7 @@ _modvu(Vlong *r, Vlong n, Vlong d)
 }
 
 void
-runtime·uint64mod(Vlong n, Vlong d, Vlong q)
+runtime_uint64mod(Vlong n, Vlong d, Vlong q)
 {
 	_modvu(&q, n, d);
 }
@@ -345,7 +345,7 @@ _divv(Vlong *q, Vlong n, Vlong d)
 }
 
 void
-runtime·int64div(Vlong n, Vlong d, Vlong q)
+runtime_int64div(Vlong n, Vlong d, Vlong q)
 {
 	_divv(&q, n, d);
 }
@@ -372,7 +372,7 @@ _modv(Vlong *r, Vlong n, Vlong d)
 }
 
 void
-runtime·int64mod(Vlong n, Vlong d, Vlong q)
+runtime_int64mod(Vlong n, Vlong d, Vlong q)
 {
 	_modv(&q, n, d);
 }
@@ -525,7 +525,7 @@ _vasop(Vlong *ret, void *lv, void fn(Vlong*, Vlong, Vlong), int type, Vlong rv)
 	u = *ret;
 	switch(type) {
 	default:
-		runtime·abort();
+		runtime_abort();
 		break;
 
 	case 1: /* schar */

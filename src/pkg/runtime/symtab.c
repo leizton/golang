@@ -60,7 +60,7 @@ walksymtab(void (*fn)(Sym*))
 			}
 			p = q+2;
 		}else{
-			q = runtime·mchr(p, '\0', ep);
+			q = runtime_mchr(p, '\0', ep);
 			if(q == nil)
 				break;
 			p = q+1;
@@ -91,14 +91,14 @@ dofunc(Sym *sym)
 	case 'T':
 	case 'l':
 	case 'L':
-		if(runtime·strcmp(sym->name, (byte*)"etext") == 0)
+		if(runtime_strcmp(sym->name, (byte*)"etext") == 0)
 			break;
 		if(func == nil) {
 			nfunc++;
 			break;
 		}
 		f = &func[nfunc++];
-		f->name = runtime·gostringnocopy(sym->name);
+		f->name = runtime_gostringnocopy(sym->name);
 		f->entry = sym->value;
 		if(sym->symtype == 'L' || sym->symtype == 'l')
 			f->frame = -sizeof(uintptr);
@@ -121,8 +121,8 @@ dofunc(Sym *sym)
 		if(fname == nil) {
 			if(sym->value >= nfname) {
 				if(sym->value >= 0x10000) {
-					runtime·printf("invalid symbol file index %p\n", sym->value);
-					runtime·throw("mangled symbol table");
+					runtime_printf("invalid symbol file index %p\n", sym->value);
+					runtime_throw("mangled symbol table");
 				}
 				nfname = sym->value+1;
 			}
@@ -155,12 +155,12 @@ makepath(byte *buf, int32 nbuf, byte *path)
 		if(n >= nfname)
 			break;
 		q = fname[n];
-		len = runtime·findnull(q);
+		len = runtime_findnull(q);
 		if(p+1+len >= ep)
 			break;
 		if(p > buf && p[-1] != '/')
 			*p++ = '/';
-		runtime·memmove(p, q, len+1);
+		runtime_memmove(p, q, len+1);
 		p += len;
 	}
 }
@@ -186,7 +186,7 @@ dosrcline(Sym *sym)
 	switch(sym->symtype) {
 	case 't':
 	case 'T':
-		if(runtime·strcmp(sym->name, (byte*)"etext") == 0)
+		if(runtime_strcmp(sym->name, (byte*)"etext") == 0)
 			break;
 		f = &func[nfunc++];
 		// find source file
@@ -205,7 +205,7 @@ dosrcline(Sym *sym)
 			nfile = 0;
 			if(nfile == nelem(files))
 				return;
-			files[nfile].srcstring = runtime·gostring(srcbuf);
+			files[nfile].srcstring = runtime_gostring(srcbuf);
 			files[nfile].aline = 0;
 			files[nfile++].delta = 0;
 		} else {
@@ -216,7 +216,7 @@ dosrcline(Sym *sym)
 					incstart = sym->value;
 				if(nhist == 0 && nfile < nelem(files)) {
 					// new top-level file
-					files[nfile].srcstring = runtime·gostring(srcbuf);
+					files[nfile].srcstring = runtime_gostring(srcbuf);
 					files[nfile].aline = sym->value;
 					// this is "line 0"
 					files[nfile++].delta = sym->value - 1;
@@ -264,7 +264,7 @@ splitpcln(void)
 	for(;;) {
 		while(p < ep && *p > 128)
 			pc += pcquant * (*p++ - 128);
-		// runtime·printf("pc<%p targetpc=%p line=%d\n", pc, targetpc, line);
+		// runtime_printf("pc<%p targetpc=%p line=%d\n", pc, targetpc, line);
 		if(*p == 0) {
 			if(p+5 > ep)
 				break;
@@ -317,7 +317,7 @@ splitpcln(void)
 // (Source file is f->src.)
 // NOTE(rsc): If you edit this function, also edit extern.go:/FileLine
 int32
-runtime·funcline(Func *f, uintptr targetpc)
+runtime_funcline(Func *f, uintptr targetpc)
 {
 	byte *p, *ep;
 	uintptr pc;
@@ -341,8 +341,8 @@ runtime·funcline(Func *f, uintptr targetpc)
 	ep = p + f->pcln.len;
 	pc = f->pc0;
 	line = f->ln0;
-	if(debug && !runtime·panicking)
-		runtime·printf("funcline start pc=%p targetpc=%p line=%d tab=%p+%d\n",
+	if(debug && !runtime_panicking)
+		runtime_printf("funcline start pc=%p targetpc=%p line=%d tab=%p+%d\n",
 			pc, targetpc, line, p, (int32)f->pcln.len);
 	for(;;) {
 		// Table is a sequence of updates.
@@ -352,8 +352,8 @@ runtime·funcline(Func *f, uintptr targetpc)
 		while(p < ep && *p > 128)
 			pc += pcquant * (*p++ - 128);
 
-		if(debug && !runtime·panicking)
-			runtime·printf("pc<%p targetpc=%p line=%d\n", pc, targetpc, line);
+		if(debug && !runtime_panicking)
+			runtime_printf("pc<%p targetpc=%p line=%d\n", pc, targetpc, line);
 		
 		// If the pc has advanced too far or we're out of data,
 		// stop and the last known line number.
@@ -372,8 +372,8 @@ runtime·funcline(Func *f, uintptr targetpc)
 		else
 			line -= *p++ - 64;
 		// Now pc, line pair is consistent.
-		if(debug && !runtime·panicking)
-			runtime·printf("pc=%p targetpc=%p line=%d\n", pc, targetpc, line);
+		if(debug && !runtime_panicking)
+			runtime_printf("pc=%p targetpc=%p line=%d\n", pc, targetpc, line);
 
 		// PC increments implicitly on each iteration.
 		pc += pcquant;
@@ -382,10 +382,10 @@ runtime·funcline(Func *f, uintptr targetpc)
 }
 
 void
-runtime·funcline_go(Func *f, uintptr targetpc, String retfile, int32 retline)
+runtime_funcline_go(Func *f, uintptr targetpc, String retfile, int32 retline)
 {
 	retfile = f->src;
-	retline = runtime·funcline(f, targetpc);
+	retline = runtime_funcline(f, targetpc);
 	FLUSH(&retfile);
 	FLUSH(&retline);
 }
@@ -409,9 +409,9 @@ buildfuncs(void)
 	walksymtab(dofunc);
 
 	// initialize tables
-	func = runtime·mal((nfunc+1)*sizeof func[0]);
+	func = runtime_mal((nfunc+1)*sizeof func[0]);
 	func[nfunc].entry = (uint64)etext;
-	fname = runtime·mal(nfname*sizeof fname[0]);
+	fname = runtime_mal(nfname*sizeof fname[0]);
 	nfunc = 0;
 	walksymtab(dofunc);
 
@@ -425,7 +425,7 @@ buildfuncs(void)
 }
 
 Func*
-runtime·findfunc(uintptr addr)
+runtime_findfunc(uintptr addr)
 {
 	Func *f;
 	int32 nf, n;
@@ -440,13 +440,13 @@ runtime·findfunc(uintptr addr)
 	// Avoid deadlock on fault during malloc
 	// by not calling buildfuncs if we're already in malloc.
 	if(!m->mallocing && !m->gcing) {
-		if(runtime·atomicload(&funcinit) == 0) {
-			runtime·lock(&funclock);
+		if(runtime_atomicload(&funcinit) == 0) {
+			runtime_lock(&funclock);
 			if(funcinit == 0) {
 				buildfuncs();
-				runtime·atomicstore(&funcinit, 1);
+				runtime_atomicstore(&funcinit, 1);
 			}
-			runtime·unlock(&funclock);
+			runtime_unlock(&funclock);
 		}
 	}
 
@@ -474,7 +474,7 @@ runtime·findfunc(uintptr addr)
 	// that the address was in the table bounds.
 	// this can only happen if the table isn't sorted
 	// by address or if the binary search above is buggy.
-	runtime·prints("findfunc unreachable\n");
+	runtime_prints("findfunc unreachable\n");
 	return nil;
 }
 
@@ -509,11 +509,11 @@ contains(String s, int8 *p)
 }
 
 bool
-runtime·showframe(Func *f)
+runtime_showframe(Func *f)
 {
 	static int32 traceback = -1;
 	
 	if(traceback < 0)
-		traceback = runtime·gotraceback();
+		traceback = runtime_gotraceback();
 	return traceback > 1 || contains(f->name, ".") && !hasprefix(f->name, "runtime.");
 }

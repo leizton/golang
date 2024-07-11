@@ -71,7 +71,7 @@ enum
  * reasons, we return 1 instead of 0.
  */
 int32
-runtime·charntorune(int32 *rune, uint8 *str, int32 length)
+runtime_charntorune(int32 *rune, uint8 *str, int32 length)
 {
 	int32 c, c1, c2, c3, l;
 
@@ -167,7 +167,7 @@ badlen:
 }
 
 int32
-runtime·runetochar(byte *str, int32 rune)  /* note: in original, arg2 was pointer */
+runtime_runetochar(byte *str, int32 rune)  /* note: in original, arg2 was pointer */
 {
 	/* Runes are signed, so convert to unsigned for range check. */
 	uint32 c;

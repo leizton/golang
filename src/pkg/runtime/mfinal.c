@@ -61,7 +61,7 @@ addfintab(Fintab *t, void *k, void (*fn)(void*), int32 nret)
 	}
 
 	// cannot happen - table is known to be non-full
-	runtime·throw("finalizer table inconsistent");
+	runtime_throw("finalizer table inconsistent");
 
 ret:
 	t->key[i] = k;
@@ -96,7 +96,7 @@ lookfintab(Fintab *t, void *k, bool del, Fin *f)
 	}
 
 	// cannot happen - table is known to be non-full
-	runtime·throw("finalizer table inconsistent");
+	runtime_throw("finalizer table inconsistent");
 	return false;
 }
 
@@ -107,7 +107,7 @@ resizefintab(Fintab *tab)
 	void *k;
 	int32 i;
 
-	runtime·memclr((byte*)&newtab, sizeof newtab);
+	runtime_memclr((byte*)&newtab, sizeof newtab);
 	newtab.max = tab->max;
 	if(newtab.max == 0)
 		newtab.max = 3*3*3;
@@ -117,8 +117,8 @@ resizefintab(Fintab *tab)
 		newtab.max *= 3;
 	}
 	
-	newtab.key = runtime·mallocgc(newtab.max*sizeof newtab.key[0], FlagNoPointers, 0, 1);
-	newtab.val = runtime·mallocgc(newtab.max*sizeof newtab.val[0], 0, 0, 1);
+	newtab.key = runtime_mallocgc(newtab.max*sizeof newtab.key[0], FlagNoPointers, 0, 1);
+	newtab.val = runtime_mallocgc(newtab.max*sizeof newtab.val[0], 0, 0, 1);
 	
 	for(i=0; i<tab->max; i++) {
 		k = tab->key[i];
@@ -126,8 +126,8 @@ resizefintab(Fintab *tab)
 			addfintab(&newtab, k, tab->val[i].fn, tab->val[i].nret);
 	}
 	
-	runtime·free(tab->key);
-	runtime·free(tab->val);
+	runtime_free(tab->key);
+	runtime_free(tab->val);
 	
 	tab->key = newtab.key;
 	tab->val = newtab.val;
@@ -137,26 +137,26 @@ resizefintab(Fintab *tab)
 }
 
 bool
-runtime·addfinalizer(void *p, void (*f)(void*), int32 nret)
+runtime_addfinalizer(void *p, void (*f)(void*), int32 nret)
 {
 	Fintab *tab;
 	byte *base;
 	
 	if(debug) {
-		if(!runtime·mlookup(p, &base, nil, nil) || p != base)
-			runtime·throw("addfinalizer on invalid pointer");
+		if(!runtime_mlookup(p, &base, nil, nil) || p != base)
+			runtime_throw("addfinalizer on invalid pointer");
 	}
 	
 	tab = TAB(p);
-	runtime·lock(tab);
+	runtime_lock(tab);
 	if(f == nil) {
 		lookfintab(tab, p, true, nil);
-		runtime·unlock(tab);
+		runtime_unlock(tab);
 		return true;
 	}
 
 	if(lookfintab(tab, p, false, nil)) {
-		runtime·unlock(tab);
+		runtime_unlock(tab);
 		return false;
 	}
 
@@ -167,24 +167,24 @@ runtime·addfinalizer(void *p, void (*f)(void*), int32 nret)
 	}
 
 	addfintab(tab, p, f, nret);
-	runtime·setblockspecial(p, true);
-	runtime·unlock(tab);
+	runtime_setblockspecial(p, true);
+	runtime_unlock(tab);
 	return true;
 }
 
 // get finalizer; if del, delete finalizer.
 // caller is responsible for updating RefHasFinalizer (special) bit.
 bool
-runtime·getfinalizer(void *p, bool del, void (**fn)(void*), int32 *nret)
+runtime_getfinalizer(void *p, bool del, void (**fn)(void*), int32 *nret)
 {
 	Fintab *tab;
 	bool res;
 	Fin f;
 	
 	tab = TAB(p);
-	runtime·lock(tab);
+	runtime_lock(tab);
 	res = lookfintab(tab, p, del, &f);
-	runtime·unlock(tab);
+	runtime_unlock(tab);
 	if(res==false)
 		return false;
 	*fn = f.fn;
@@ -193,19 +193,19 @@ runtime·getfinalizer(void *p, bool del, void (**fn)(void*), int32 *nret)
 }
 
 void
-runtime·walkfintab(void (*fn)(void*))
+runtime_walkfintab(void (*fn)(void*))
 {
 	void **key;
 	void **ekey;
 	int32 i;
 
 	for(i=0; i<TABSZ; i++) {
-		runtime·lock(&fintab[i]);
+		runtime_lock(&fintab[i]);
 		key = fintab[i].key;
 		ekey = key + fintab[i].max;
 		for(; key < ekey; key++)
 			if(*key != nil && *key != ((void*)-1))
 				fn(*key);
-		runtime·unlock(&fintab[i]);
+		runtime_unlock(&fintab[i]);
 	}
 }

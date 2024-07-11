@@ -5,13 +5,13 @@
 #include "runtime.h"
 
 void
-runtime·sigenable(uint32 sig)
+runtime_sigenable(uint32 sig)
 {
 	USED(sig);
 }
 
 void
-runtime·resetcpuprofiler(int32 hz)
+runtime_resetcpuprofiler(int32 hz)
 {
 	// TODO: Enable profiling interrupts.
 	

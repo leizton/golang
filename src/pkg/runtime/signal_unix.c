@@ -8,25 +8,25 @@
 #include "defs_GOOS_GOARCH.h"
 #include "os_GOOS.h"
 
-extern SigTab runtime·sigtab[];
+extern SigTab runtime_sigtab[];
 
 void
-runtime·initsig(void)
+runtime_initsig(void)
 {
 	int32 i;
 	SigTab *t;
 
 	// First call: basic setup.
 	for(i = 0; i<NSIG; i++) {
-		t = &runtime·sigtab[i];
+		t = &runtime_sigtab[i];
 		if((t->flags == 0) || (t->flags & SigDefault))
 			continue;
-		runtime·setsig(i, runtime·sighandler, true);
+		runtime_setsig(i, runtime_sighandler, true);
 	}
 }
 
 void
-runtime·sigenable(uint32 sig)
+runtime_sigenable(uint32 sig)
 {
 	int32 i;
 	SigTab *t;
@@ -34,9 +34,9 @@ runtime·sigenable(uint32 sig)
 	for(i = 0; i<NSIG; i++) {
 		// ~0 means all signals.
 		if(~sig == 0 || i == sig) {
-			t = &runtime·sigtab[i];
+			t = &runtime_sigtab[i];
 			if(t->flags & SigDefault) {
-				runtime·setsig(i, runtime·sighandler, true);
+				runtime_setsig(i, runtime_sighandler, true);
 				t->flags &= ~SigDefault;  // make this idempotent
 			}
 		}
@@ -44,27 +44,27 @@ runtime·sigenable(uint32 sig)
 }
 
 void
-runtime·resetcpuprofiler(int32 hz)
+runtime_resetcpuprofiler(int32 hz)
 {
 	Itimerval it;
 
-	runtime·memclr((byte*)&it, sizeof it);
+	runtime_memclr((byte*)&it, sizeof it);
 	if(hz == 0) {
-		runtime·setitimer(ITIMER_PROF, &it, nil);
-		runtime·setprof(false);
+		runtime_setitimer(ITIMER_PROF, &it, nil);
+		runtime_setprof(false);
 	} else {
 		it.it_interval.tv_sec = 0;
 		it.it_interval.tv_usec = 1000000 / hz;
 		it.it_value = it.it_interval;
-		runtime·setitimer(ITIMER_PROF, &it, nil);
-		runtime·setprof(true);
+		runtime_setitimer(ITIMER_PROF, &it, nil);
+		runtime_setprof(true);
 	}
 	m->profilehz = hz;
 }
 
 void
-os·sigpipe(void)
+os_sigpipe(void)
 {
-	runtime·setsig(SIGPIPE, SIG_DFL, false);
-	runtime·raisesigpipe();
+	runtime_setsig(SIGPIPE, SIG_DFL, false);
+	runtime_raisesigpipe();
 }

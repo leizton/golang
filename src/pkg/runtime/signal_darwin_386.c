@@ -8,25 +8,25 @@
 #include "signals_GOOS.h"
 
 void
-runtime·dumpregs(Regs32 *r)
+runtime_dumpregs(Regs32 *r)
 {
-	runtime·printf("eax     %x\n", r->eax);
-	runtime·printf("ebx     %x\n", r->ebx);
-	runtime·printf("ecx     %x\n", r->ecx);
-	runtime·printf("edx     %x\n", r->edx);
-	runtime·printf("edi     %x\n", r->edi);
-	runtime·printf("esi     %x\n", r->esi);
-	runtime·printf("ebp     %x\n", r->ebp);
-	runtime·printf("esp     %x\n", r->esp);
-	runtime·printf("eip     %x\n", r->eip);
-	runtime·printf("eflags  %x\n", r->eflags);
-	runtime·printf("cs      %x\n", r->cs);
-	runtime·printf("fs      %x\n", r->fs);
-	runtime·printf("gs      %x\n", r->gs);
+	runtime_printf("eax     %x\n", r->eax);
+	runtime_printf("ebx     %x\n", r->ebx);
+	runtime_printf("ecx     %x\n", r->ecx);
+	runtime_printf("edx     %x\n", r->edx);
+	runtime_printf("edi     %x\n", r->edi);
+	runtime_printf("esi     %x\n", r->esi);
+	runtime_printf("ebp     %x\n", r->ebp);
+	runtime_printf("esp     %x\n", r->esp);
+	runtime_printf("eip     %x\n", r->eip);
+	runtime_printf("eflags  %x\n", r->eflags);
+	runtime_printf("cs      %x\n", r->cs);
+	runtime_printf("fs      %x\n", r->fs);
+	runtime_printf("gs      %x\n", r->gs);
 }
 
 void
-runtime·sighandler(int32 sig, Siginfo *info, void *context, G *gp)
+runtime_sighandler(int32 sig, Siginfo *info, void *context, G *gp)
 {
 	Ucontext *uc;
 	Mcontext32 *mc;
@@ -41,11 +41,11 @@ runtime·sighandler(int32 sig, Siginfo *info, void *context, G *gp)
 
 	if(sig == SIGPROF) {
 		if(gp != m->g0 && gp != m->gsignal)
-			runtime·sigprof((uint8*)r->eip, (uint8*)r->esp, nil, gp);
+			runtime_sigprof((uint8*)r->eip, (uint8*)r->esp, nil, gp);
 		return;
 	}
 
-	t = &runtime·sigtab[sig];
+	t = &runtime_sigtab[sig];
 	if(info->si_code != SI_USER && (t->flags & SigPanic)) {
 		if(gp == nil)
 			goto Throw;
@@ -69,72 +69,72 @@ runtime·sighandler(int32 sig, Siginfo *info, void *context, G *gp)
 		gp->sigcode1 = (uintptr)info->si_addr;
 		gp->sigpc = r->eip;
 
-		// Only push runtime·sigpanic if r->eip != 0.
+		// Only push runtime_sigpanic if r->eip != 0.
 		// If r->eip == 0, probably panicked because of a
 		// call to a nil func.  Not pushing that onto sp will
-		// make the trace look like a call to runtime·sigpanic instead.
-		// (Otherwise the trace will end at runtime·sigpanic and we
+		// make the trace look like a call to runtime_sigpanic instead.
+		// (Otherwise the trace will end at runtime_sigpanic and we
 		// won't get to see who faulted.)
 		if(r->eip != 0) {
 			sp = (uintptr*)r->esp;
 			*--sp = r->eip;
 			r->esp = (uintptr)sp;
 		}
-		r->eip = (uintptr)runtime·sigpanic;
+		r->eip = (uintptr)runtime_sigpanic;
 		return;
 	}
 
 	if(info->si_code == SI_USER || (t->flags & SigNotify))
-		if(runtime·sigsend(sig))
+		if(runtime_sigsend(sig))
 			return;
 	if(t->flags & SigKill)
-		runtime·exit(2);
+		runtime_exit(2);
 	if(!(t->flags & SigThrow))
 		return;
 
 Throw:
-	runtime·startpanic();
+	runtime_startpanic();
 
 	if(sig < 0 || sig >= NSIG){
-		runtime·printf("Signal %d\n", sig);
+		runtime_printf("Signal %d\n", sig);
 	}else{
-		runtime·printf("%s\n", runtime·sigtab[sig].name);
+		runtime_printf("%s\n", runtime_sigtab[sig].name);
 	}
 
-	runtime·printf("pc: %x\n", r->eip);
-	runtime·printf("\n");
+	runtime_printf("pc: %x\n", r->eip);
+	runtime_printf("\n");
 
-	if(runtime·gotraceback()){
-		runtime·traceback((void*)r->eip, (void*)r->esp, 0, gp);
-		runtime·tracebackothers(gp);
-		runtime·dumpregs(r);
+	if(runtime_gotraceback()){
+		runtime_traceback((void*)r->eip, (void*)r->esp, 0, gp);
+		runtime_tracebackothers(gp);
+		runtime_dumpregs(r);
 	}
 
-	runtime·exit(2);
+	runtime_exit(2);
 }
 
 void
-runtime·signalstack(byte *p, int32 n)
+runtime_signalstack(byte *p, int32 n)
 {
 	StackT st;
 
 	st.ss_sp = p;
 	st.ss_size = n;
 	st.ss_flags = 0;
-	runtime·sigaltstack(&st, nil);
+	runtime_sigaltstack(&st, nil);
 }
 
 void
-runtime·setsig(int32 i, void (*fn)(int32, Siginfo*, void*, G*), bool restart)
+runtime_setsig(int32 i, void (*fn)(int32, Siginfo*, void*, G*), bool restart)
 {
 	Sigaction sa;
 
-	runtime·memclr((byte*)&sa, sizeof sa);
+	runtime_memclr((byte*)&sa, sizeof sa);
 	sa.sa_flags = SA_SIGINFO|SA_ONSTACK;
 	if(restart)
 		sa.sa_flags |= SA_RESTART;
 	sa.sa_mask = ~0U;
-	sa.sa_tramp = (void*)runtime·sigtramp;	// runtime·sigtramp's job is to call into real handler
+	sa.sa_tramp = (void*)runtime_sigtramp;	// runtime_sigtramp's job is to call into real handler
 	*(uintptr*)sa.__sigaction_u = (uintptr)fn;
-	runtime·sigaction(i, &sa, nil);
+	runtime_sigaction(i, &sa, nil);
 }

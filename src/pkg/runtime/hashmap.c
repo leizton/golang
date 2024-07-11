@@ -123,7 +123,7 @@ hash_init (Hmap *h, int32 datasize, int64 hint)
 	h->count = 0;
 	h->changes = 0;
 	h->st = hash_subtable_new (h, init_power, 0);
-	h->hash0 = runtime·fastrand1();
+	h->hash0 = runtime_fastrand1();
 }
 
 static void
@@ -420,7 +420,7 @@ hash_insert_internal (MapType *t, struct hash_subtable **pst, int32 flags, hash_
 					assert ((flags & HASH_REHASH) == 0);
 					hash++;
 					if ((hash & HASH_MASK) == HASH_SUBHASH)
-						runtime·throw("runtime: map hash collision overflow");
+						runtime_throw("runtime: map hash collision overflow");
 				}
 				ins_e = HASH_OFFSET (ins_e, elemsize);
 				ins_i++;
@@ -627,9 +627,9 @@ hash_iter_init (MapType *t, Hmap *h, struct hash_iter *it)
 	// We don't care about not having a bottom bit but we
 	// do want top bits.
 	if(sizeof(void*) == 8)
-		it->cycle = (uint64)runtime·fastrand1()<<33 | (uint64)runtime·fastrand1()<<2;
+		it->cycle = (uint64)runtime_fastrand1()<<33 | (uint64)runtime_fastrand1()<<2;
 	else
-		it->cycle = runtime·fastrand1()<<1;
+		it->cycle = runtime_fastrand1()<<1;
 	it->cycled = false;
 	it->last_hash = it->cycle;
 	iter_restart(it, it->h->st, 0);
@@ -730,7 +730,7 @@ static	int32	debug	= 0;
 
 // makemap(typ *Type, hint uint32) (hmap *map[any]any);
 Hmap*
-runtime·makemap_c(MapType *typ, int64 hint)
+runtime_makemap_c(MapType *typ, int64 hint)
 {
 	Hmap *h;
 	Type *key, *val;
@@ -740,12 +740,12 @@ runtime·makemap_c(MapType *typ, int64 hint)
 	val = typ->elem;
 
 	if(hint < 0 || (int32)hint != hint)
-		runtime·panicstring("makemap: size out of range");
+		runtime_panicstring("makemap: size out of range");
 
-	if(key->alg->hash == runtime·nohash)
-		runtime·throw("runtime.makemap: unsupported map key type");
+	if(key->alg->hash == runtime_nohash)
+		runtime_throw("runtime.makemap: unsupported map key type");
 
-	h = runtime·mal(sizeof(*h));
+	h = runtime_mal(sizeof(*h));
 	h->flag |= CanFreeTable;  /* until reflect gets involved, free is okay */
 
 	ksize = ROUND(key->size, sizeof(void*));
@@ -774,7 +774,7 @@ runtime·makemap_c(MapType *typ, int64 hint)
 	// figure out offsets of map call arguments.
 
 	if(debug) {
-		runtime·printf("makemap: map=%p; keysize=%p; valsize=%p; keyalg=%p; valalg=%p\n",
+		runtime_printf("makemap: map=%p; keysize=%p; valsize=%p; keyalg=%p; valalg=%p\n",
 			h, key->size, val->size, key->alg, val->alg);
 	}
 
@@ -783,23 +783,23 @@ runtime·makemap_c(MapType *typ, int64 hint)
 
 // makemap(key, val *Type, hint int64) (hmap *map[any]any);
 void
-runtime·makemap(MapType *typ, int64 hint, Hmap *ret)
+runtime_makemap(MapType *typ, int64 hint, Hmap *ret)
 {
-	ret = runtime·makemap_c(typ, hint);
+	ret = runtime_makemap_c(typ, hint);
 	FLUSH(&ret);
 }
 
 // For reflect:
 //	func makemap(Type *mapType) (hmap *map)
 void
-reflect·makemap(MapType *t, Hmap *ret)
+reflect_makemap(MapType *t, Hmap *ret)
 {
-	ret = runtime·makemap_c(t, 0);
+	ret = runtime_makemap_c(t, 0);
 	FLUSH(&ret);
 }
 
 void
-runtime·mapaccess(MapType *t, Hmap *h, byte *ak, byte *av, bool *pres)
+runtime_mapaccess(MapType *t, Hmap *h, byte *ak, byte *av, bool *pres)
 {
 	byte *res;
 	Type *elem;
@@ -811,8 +811,8 @@ runtime·mapaccess(MapType *t, Hmap *h, byte *ak, byte *av, bool *pres)
 		return;
 	}
 
-	if(runtime·gcwaiting)
-		runtime·gosched();
+	if(runtime_gcwaiting)
+		runtime_gosched();
 
 	res = nil;
 	if(hash_lookup(t, h, ak, (void**)&res)) {
@@ -827,7 +827,7 @@ runtime·mapaccess(MapType *t, Hmap *h, byte *ak, byte *av, bool *pres)
 // mapaccess1(hmap *map[any]any, key any) (val any);
 #pragma textflag 7
 void
-runtime·mapaccess1(MapType *t, Hmap *h, ...)
+runtime_mapaccess1(MapType *t, Hmap *h, ...)
 {
 	byte *ak, *av;
 	bool pres;
@@ -835,25 +835,25 @@ runtime·mapaccess1(MapType *t, Hmap *h, ...)
 	ak = (byte*)(&h + 1);
 	av = ak + ROUND(t->key->size, Structrnd);
 
-	runtime·mapaccess(t, h, ak, av, &pres);
+	runtime_mapaccess(t, h, ak, av, &pres);
 
 	if(debug) {
-		runtime·prints("runtime.mapaccess1: map=");
-		runtime·printpointer(h);
-		runtime·prints("; key=");
+		runtime_prints("runtime.mapaccess1: map=");
+		runtime_printpointer(h);
+		runtime_prints("; key=");
 		t->key->alg->print(t->key->size, ak);
-		runtime·prints("; val=");
+		runtime_prints("; val=");
 		t->elem->alg->print(t->elem->size, av);
-		runtime·prints("; pres=");
-		runtime·printbool(pres);
-		runtime·prints("\n");
+		runtime_prints("; pres=");
+		runtime_printbool(pres);
+		runtime_prints("\n");
 	}
 }
 
 // mapaccess2(hmap *map[any]any, key any) (val any, pres bool);
 #pragma textflag 7
 void
-runtime·mapaccess2(MapType *t, Hmap *h, ...)
+runtime_mapaccess2(MapType *t, Hmap *h, ...)
 {
 	byte *ak, *av, *ap;
 
@@ -861,18 +861,18 @@ runtime·mapaccess2(MapType *t, Hmap *h, ...)
 	av = ak + ROUND(t->key->size, Structrnd);
 	ap = av + t->elem->size;
 
-	runtime·mapaccess(t, h, ak, av, ap);
+	runtime_mapaccess(t, h, ak, av, ap);
 
 	if(debug) {
-		runtime·prints("runtime.mapaccess2: map=");
-		runtime·printpointer(h);
-		runtime·prints("; key=");
+		runtime_prints("runtime.mapaccess2: map=");
+		runtime_printpointer(h);
+		runtime_prints("; key=");
 		t->key->alg->print(t->key->size, ak);
-		runtime·prints("; val=");
+		runtime_prints("; val=");
 		t->elem->alg->print(t->key->size, av);
-		runtime·prints("; pres=");
-		runtime·printbool(*ap);
-		runtime·prints("\n");
+		runtime_prints("; pres=");
+		runtime_printbool(*ap);
+		runtime_prints("\n");
 	}
 }
 
@@ -881,7 +881,7 @@ runtime·mapaccess2(MapType *t, Hmap *h, ...)
 // where an iword is the same word an interface value would use:
 // the actual data if it fits, or else a pointer to the data.
 void
-reflect·mapaccess(MapType *t, Hmap *h, uintptr key, uintptr val, bool pres)
+reflect_mapaccess(MapType *t, Hmap *h, uintptr key, uintptr val, bool pres)
 {
 	byte *ak, *av;
 
@@ -894,25 +894,25 @@ reflect·mapaccess(MapType *t, Hmap *h, uintptr key, uintptr val, bool pres)
 	if(t->elem->size <= sizeof(val))
 		av = (byte*)&val;
 	else {
-		av = runtime·mal(t->elem->size);
+		av = runtime_mal(t->elem->size);
 		val = (uintptr)av;
 	}
-	runtime·mapaccess(t, h, ak, av, &pres);
+	runtime_mapaccess(t, h, ak, av, &pres);
 	FLUSH(&val);
 	FLUSH(&pres);
 }
 
 void
-runtime·mapassign(MapType *t, Hmap *h, byte *ak, byte *av)
+runtime_mapassign(MapType *t, Hmap *h, byte *ak, byte *av)
 {
 	byte *res;
 	int32 hit;
 
 	if(h == nil)
-		runtime·panicstring("assignment to entry in nil map");
+		runtime_panicstring("assignment to entry in nil map");
 
-	if(runtime·gcwaiting)
-		runtime·gosched();
+	if(runtime_gcwaiting)
+		runtime_gosched();
 
 	if(av == nil) {
 		hash_remove(t, h, ak);
@@ -923,63 +923,63 @@ runtime·mapassign(MapType *t, Hmap *h, byte *ak, byte *av)
 	hit = hash_insert(t, h, ak, (void**)&res);
 	if(!hit) {
 		if(h->flag & IndirectKey)
-			*(void**)res = runtime·mal(t->key->size);
+			*(void**)res = runtime_mal(t->key->size);
 		if(h->flag & IndirectVal)
-			*(void**)(res+h->valoff) = runtime·mal(t->elem->size);
+			*(void**)(res+h->valoff) = runtime_mal(t->elem->size);
 	}
 	t->key->alg->copy(t->key->size, hash_keyptr(h, res), ak);
 	t->elem->alg->copy(t->elem->size, hash_valptr(h, res), av);
 
 	if(debug) {
-		runtime·prints("mapassign: map=");
-		runtime·printpointer(h);
-		runtime·prints("; key=");
+		runtime_prints("mapassign: map=");
+		runtime_printpointer(h);
+		runtime_prints("; key=");
 		t->key->alg->print(t->key->size, ak);
-		runtime·prints("; val=");
+		runtime_prints("; val=");
 		t->elem->alg->print(t->elem->size, av);
-		runtime·prints("; hit=");
-		runtime·printint(hit);
-		runtime·prints("; res=");
-		runtime·printpointer(res);
-		runtime·prints("\n");
+		runtime_prints("; hit=");
+		runtime_printint(hit);
+		runtime_prints("; res=");
+		runtime_printpointer(res);
+		runtime_prints("\n");
 	}
 }
 
 // mapassign1(mapType *type, hmap *map[any]any, key any, val any);
 #pragma textflag 7
 void
-runtime·mapassign1(MapType *t, Hmap *h, ...)
+runtime_mapassign1(MapType *t, Hmap *h, ...)
 {
 	byte *ak, *av;
 
 	if(h == nil)
-		runtime·panicstring("assignment to entry in nil map");
+		runtime_panicstring("assignment to entry in nil map");
 
 	ak = (byte*)(&h + 1);
 	av = ak + ROUND(t->key->size, t->elem->align);
 
-	runtime·mapassign(t, h, ak, av);
+	runtime_mapassign(t, h, ak, av);
 }
 
 // mapdelete(mapType *type, hmap *map[any]any, key any)
 #pragma textflag 7
 void
-runtime·mapdelete(MapType *t, Hmap *h, ...)
+runtime_mapdelete(MapType *t, Hmap *h, ...)
 {
 	byte *ak;
 
 	if(h == nil)
-		runtime·panicstring("deletion of entry in nil map");
+		runtime_panicstring("deletion of entry in nil map");
 
 	ak = (byte*)(&h + 1);
-	runtime·mapassign(t, h, ak, nil);
+	runtime_mapassign(t, h, ak, nil);
 
 	if(debug) {
-		runtime·prints("mapdelete: map=");
-		runtime·printpointer(h);
-		runtime·prints("; key=");
+		runtime_prints("mapdelete: map=");
+		runtime_printpointer(h);
+		runtime_prints("; key=");
 		t->key->alg->print(t->key->size, ak);
-		runtime·prints("\n");
+		runtime_prints("\n");
 	}
 }
 
@@ -988,12 +988,12 @@ runtime·mapdelete(MapType *t, Hmap *h, ...)
 // where an iword is the same word an interface value would use:
 // the actual data if it fits, or else a pointer to the data.
 void
-reflect·mapassign(MapType *t, Hmap *h, uintptr key, uintptr val, bool pres)
+reflect_mapassign(MapType *t, Hmap *h, uintptr key, uintptr val, bool pres)
 {
 	byte *ak, *av;
 
 	if(h == nil)
-		runtime·panicstring("assignment to entry in nil map");
+		runtime_panicstring("assignment to entry in nil map");
 	if(t->key->size <= sizeof(key))
 		ak = (byte*)&key;
 	else
@@ -1004,12 +1004,12 @@ reflect·mapassign(MapType *t, Hmap *h, uintptr key, uintptr val, bool pres)
 		av = (byte*)val;
 	if(!pres)
 		av = nil;
-	runtime·mapassign(t, h, ak, av);
+	runtime_mapassign(t, h, ak, av);
 }
 
 // mapiterinit(mapType *type, hmap *map[any]any, hiter *any);
 void
-runtime·mapiterinit(MapType *t, Hmap *h, struct hash_iter *it)
+runtime_mapiterinit(MapType *t, Hmap *h, struct hash_iter *it)
 {
 	if(h == nil) {
 		it->data = nil;
@@ -1018,25 +1018,25 @@ runtime·mapiterinit(MapType *t, Hmap *h, struct hash_iter *it)
 	hash_iter_init(t, h, it);
 	it->data = hash_next(it);
 	if(debug) {
-		runtime·prints("runtime.mapiterinit: map=");
-		runtime·printpointer(h);
-		runtime·prints("; iter=");
-		runtime·printpointer(it);
-		runtime·prints("; data=");
-		runtime·printpointer(it->data);
-		runtime·prints("\n");
+		runtime_prints("runtime.mapiterinit: map=");
+		runtime_printpointer(h);
+		runtime_prints("; iter=");
+		runtime_printpointer(it);
+		runtime_prints("; data=");
+		runtime_printpointer(it->data);
+		runtime_prints("\n");
 	}
 }
 
 // For reflect:
 //	func mapiterinit(h map) (it iter)
 void
-reflect·mapiterinit(MapType *t, Hmap *h, struct hash_iter *it)
+reflect_mapiterinit(MapType *t, Hmap *h, struct hash_iter *it)
 {
 	uint8 flag;
 
 	if(h != nil && t->key->size > sizeof(void*)) {
-		// reflect·mapiterkey returns pointers to key data,
+		// reflect_mapiterkey returns pointers to key data,
 		// and reflect holds them, so we cannot free key data
 		// eagerly anymore.  Updating h->flag now is racy,
 		// but it's okay because this is the only possible store
@@ -1049,40 +1049,40 @@ reflect·mapiterinit(MapType *t, Hmap *h, struct hash_iter *it)
 		h->flag = flag;
 	}
 
-	it = runtime·mal(sizeof *it);
+	it = runtime_mal(sizeof *it);
 	FLUSH(&it);
-	runtime·mapiterinit(t, h, it);
+	runtime_mapiterinit(t, h, it);
 }
 
 // mapiternext(hiter *any);
 void
-runtime·mapiternext(struct hash_iter *it)
+runtime_mapiternext(struct hash_iter *it)
 {
-	if(runtime·gcwaiting)
-		runtime·gosched();
+	if(runtime_gcwaiting)
+		runtime_gosched();
 
 	it->data = hash_next(it);
 	if(debug) {
-		runtime·prints("runtime.mapiternext: iter=");
-		runtime·printpointer(it);
-		runtime·prints("; data=");
-		runtime·printpointer(it->data);
-		runtime·prints("\n");
+		runtime_prints("runtime.mapiternext: iter=");
+		runtime_printpointer(it);
+		runtime_prints("; data=");
+		runtime_printpointer(it->data);
+		runtime_prints("\n");
 	}
 }
 
 // For reflect:
 //	func mapiternext(it iter)
 void
-reflect·mapiternext(struct hash_iter *it)
+reflect_mapiternext(struct hash_iter *it)
 {
-	runtime·mapiternext(it);
+	runtime_mapiternext(it);
 }
 
 // mapiter1(hiter *any) (key any);
 #pragma textflag 7
 void
-runtime·mapiter1(struct hash_iter *it, ...)
+runtime_mapiter1(struct hash_iter *it, ...)
 {
 	Hmap *h;
 	byte *ak, *res;
@@ -1093,22 +1093,22 @@ runtime·mapiter1(struct hash_iter *it, ...)
 
 	res = it->data;
 	if(res == nil)
-		runtime·throw("runtime.mapiter1: key:val nil pointer");
+		runtime_throw("runtime.mapiter1: key:val nil pointer");
 
 	key = it->t->key;
 	key->alg->copy(key->size, ak, hash_keyptr(h, res));
 
 	if(debug) {
-		runtime·prints("mapiter2: iter=");
-		runtime·printpointer(it);
-		runtime·prints("; map=");
-		runtime·printpointer(h);
-		runtime·prints("\n");
+		runtime_prints("mapiter2: iter=");
+		runtime_printpointer(it);
+		runtime_prints("; map=");
+		runtime_printpointer(h);
+		runtime_prints("\n");
 	}
 }
 
 bool
-runtime·mapiterkey(struct hash_iter *it, void *ak)
+runtime_mapiterkey(struct hash_iter *it, void *ak)
 {
 	byte *res;
 	Type *key;
@@ -1126,7 +1126,7 @@ runtime·mapiterkey(struct hash_iter *it, void *ak)
 // where an iword is the same word an interface value would use:
 // the actual data if it fits, or else a pointer to the data.
 void
-reflect·mapiterkey(struct hash_iter *it, uintptr key, bool ok)
+reflect_mapiterkey(struct hash_iter *it, uintptr key, bool ok)
 {
 	byte *res;
 	Type *tkey;
@@ -1155,7 +1155,7 @@ reflect·mapiterkey(struct hash_iter *it, uintptr key, bool ok)
 //	func maplen(h map) (len int32)
 // Like len(m) in the actual language, we treat the nil map as length 0.
 void
-reflect·maplen(Hmap *h, int32 len)
+reflect_maplen(Hmap *h, int32 len)
 {
 	if(h == nil)
 		len = 0;
@@ -1167,7 +1167,7 @@ reflect·maplen(Hmap *h, int32 len)
 // mapiter2(hiter *any) (key any, val any);
 #pragma textflag 7
 void
-runtime·mapiter2(struct hash_iter *it, ...)
+runtime_mapiter2(struct hash_iter *it, ...)
 {
 	Hmap *h;
 	byte *ak, *av, *res;
@@ -1179,17 +1179,17 @@ runtime·mapiter2(struct hash_iter *it, ...)
 
 	res = it->data;
 	if(res == nil)
-		runtime·throw("runtime.mapiter2: key:val nil pointer");
+		runtime_throw("runtime.mapiter2: key:val nil pointer");
 
 	h = it->h;
 	t->key->alg->copy(t->key->size, ak, hash_keyptr(h, res));
 	t->elem->alg->copy(t->elem->size, av, hash_valptr(h, res));
 
 	if(debug) {
-		runtime·prints("mapiter2: iter=");
-		runtime·printpointer(it);
-		runtime·prints("; map=");
-		runtime·printpointer(h);
-		runtime·prints("\n");
+		runtime_prints("mapiter2: iter=");
+		runtime_printpointer(it);
+		runtime_prints("; map=");
+		runtime_printpointer(h);
+		runtime_prints("\n");
 	}
 }

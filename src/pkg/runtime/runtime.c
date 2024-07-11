@@ -9,8 +9,8 @@ enum {
 	maxround = sizeof(uintptr),
 };
 
-uint32	runtime·panicking;
-void	(*runtime·destroylock)(Lock*);
+uint32	runtime_panicking;
+void	(*runtime_destroylock)(Lock*);
 
 /*
  * We assume that all architectures turn faults and the like
@@ -18,118 +18,118 @@ void	(*runtime·destroylock)(Lock*);
  * to runtime.sigpanic, we do not back up the PC to find the
  * line number of the CALL instruction, because there is no CALL.
  */
-void	runtime·sigpanic(void);
+void	runtime_sigpanic(void);
 
 int32
-runtime·gotraceback(void)
+runtime_gotraceback(void)
 {
 	byte *p;
 
-	p = runtime·getenv("GOTRACEBACK");
+	p = runtime_getenv("GOTRACEBACK");
 	if(p == nil || p[0] == '\0')
 		return 1;	// default is on
-	return runtime·atoi(p);
+	return runtime_atoi(p);
 }
 
 static Lock paniclk;
 
 void
-runtime·startpanic(void)
+runtime_startpanic(void)
 {
 	if(m->dying) {
-		runtime·printf("panic during panic\n");
-		runtime·exit(3);
+		runtime_printf("panic during panic\n");
+		runtime_exit(3);
 	}
 	m->dying = 1;
-	runtime·xadd(&runtime·panicking, 1);
-	runtime·lock(&paniclk);
+	runtime_xadd(&runtime_panicking, 1);
+	runtime_lock(&paniclk);
 }
 
 void
-runtime·dopanic(int32 unused)
+runtime_dopanic(int32 unused)
 {
 	static bool didothers;
 
 	if(g->sig != 0)
-		runtime·printf("[signal %x code=%p addr=%p pc=%p]\n",
+		runtime_printf("[signal %x code=%p addr=%p pc=%p]\n",
 			g->sig, g->sigcode0, g->sigcode1, g->sigpc);
 
-	if(runtime·gotraceback()){
+	if(runtime_gotraceback()){
 		if(g != m->g0) {
-			runtime·printf("\n");
-			runtime·goroutineheader(g);
-			runtime·traceback(runtime·getcallerpc(&unused), runtime·getcallersp(&unused), 0, g);
+			runtime_printf("\n");
+			runtime_goroutineheader(g);
+			runtime_traceback(runtime_getcallerpc(&unused), runtime_getcallersp(&unused), 0, g);
 		}
 		if(!didothers) {
 			didothers = true;
-			runtime·tracebackothers(g);
+			runtime_tracebackothers(g);
 		}
 	}
-	runtime·unlock(&paniclk);
-	if(runtime·xadd(&runtime·panicking, -1) != 0) {
+	runtime_unlock(&paniclk);
+	if(runtime_xadd(&runtime_panicking, -1) != 0) {
 		// Some other m is panicking too.
 		// Let it print what it needs to print.
 		// Wait forever without chewing up cpu.
 		// It will exit when it's done.
 		static Lock deadlock;
-		runtime·lock(&deadlock);
-		runtime·lock(&deadlock);
+		runtime_lock(&deadlock);
+		runtime_lock(&deadlock);
 	}
 
-	runtime·exit(2);
+	runtime_exit(2);
 }
 
 void
-runtime·panicindex(void)
+runtime_panicindex(void)
 {
-	runtime·panicstring("index out of range");
+	runtime_panicstring("index out of range");
 }
 
 void
-runtime·panicslice(void)
+runtime_panicslice(void)
 {
-	runtime·panicstring("slice bounds out of range");
+	runtime_panicstring("slice bounds out of range");
 }
 
 void
-runtime·throwreturn(void)
+runtime_throwreturn(void)
 {
 	// can only happen if compiler is broken
-	runtime·throw("no return at end of a typed function - compiler is broken");
+	runtime_throw("no return at end of a typed function - compiler is broken");
 }
 
 void
-runtime·throwinit(void)
+runtime_throwinit(void)
 {
 	// can only happen with linker skew
-	runtime·throw("recursive call during initialization - linker skew");
+	runtime_throw("recursive call during initialization - linker skew");
 }
 
 void
-runtime·throw(int8 *s)
+runtime_throw(int8 *s)
 {
-	runtime·startpanic();
-	runtime·printf("throw: %s\n", s);
-	runtime·dopanic(0);
+	runtime_startpanic();
+	runtime_printf("throw: %s\n", s);
+	runtime_dopanic(0);
 	*(int32*)0 = 0;	// not reached
-	runtime·exit(1);	// even more not reached
+	runtime_exit(1);	// even more not reached
 }
 
 void
-runtime·panicstring(int8 *s)
+runtime_panicstring(int8 *s)
 {
 	Eface err;
 
 	if(m->gcing) {
-		runtime·printf("panic: %s\n", s);
-		runtime·throw("panic during gc");
+		runtime_printf("panic: %s\n", s);
+		runtime_throw("panic during gc");
 	}
-	runtime·newErrorString(runtime·gostringnocopy((byte*)s), &err);
-	runtime·panic(err);
+	runtime_newErrorString(runtime_gostringnocopy((byte*)s), &err);
+	runtime_panic(err);
 }
 
 int32
-runtime·mcmp(byte *s1, byte *s2, uint32 n)
+runtime_mcmp(byte *s1, byte *s2, uint32 n)
 {
 	uint32 i;
 	byte c1, c2;
@@ -147,7 +147,7 @@ runtime·mcmp(byte *s1, byte *s2, uint32 n)
 
 
 byte*
-runtime·mchr(byte *p, byte c, byte *ep)
+runtime_mchr(byte *p, byte c, byte *ep)
 {
 	for(; p < ep; p++)
 		if(*p == c)
@@ -158,25 +158,25 @@ runtime·mchr(byte *p, byte c, byte *ep)
 static int32	argc;
 static uint8**	argv;
 
-Slice os·Args;
-Slice syscall·envs;
+Slice os_Args;
+Slice syscall_envs;
 
-void (*runtime·sysargs)(int32, uint8**);
+void (*runtime_sysargs)(int32, uint8**);
 
 void
-runtime·args(int32 c, uint8 **v)
+runtime_args(int32 c, uint8 **v)
 {
 	argc = c;
 	argv = v;
-	if(runtime·sysargs != nil)
-		runtime·sysargs(c, v);
+	if(runtime_sysargs != nil)
+		runtime_sysargs(c, v);
 }
 
-int32 runtime·isplan9;
-int32 runtime·iswindows;
+int32 runtime_isplan9;
+int32 runtime_iswindows;
 
 void
-runtime·goargs(void)
+runtime_goargs(void)
 {
 	String *s;
 	int32 i;
@@ -185,16 +185,16 @@ runtime·goargs(void)
 	if(Windows)
 		return;
 
-	s = runtime·malloc(argc*sizeof s[0]);
+	s = runtime_malloc(argc*sizeof s[0]);
 	for(i=0; i<argc; i++)
-		s[i] = runtime·gostringnocopy(argv[i]);
-	os·Args.array = (byte*)s;
-	os·Args.len = argc;
-	os·Args.cap = argc;
+		s[i] = runtime_gostringnocopy(argv[i]);
+	os_Args.array = (byte*)s;
+	os_Args.len = argc;
+	os_Args.cap = argc;
 }
 
 void
-runtime·goenvs_unix(void)
+runtime_goenvs_unix(void)
 {
 	String *s;
 	int32 i, n;
@@ -202,16 +202,16 @@ runtime·goenvs_unix(void)
 	for(n=0; argv[argc+1+n] != 0; n++)
 		;
 
-	s = runtime·malloc(n*sizeof s[0]);
+	s = runtime_malloc(n*sizeof s[0]);
 	for(i=0; i<n; i++)
-		s[i] = runtime·gostringnocopy(argv[argc+1+i]);
-	syscall·envs.array = (byte*)s;
-	syscall·envs.len = n;
-	syscall·envs.cap = n;
+		s[i] = runtime_gostringnocopy(argv[argc+1+i]);
+	syscall_envs.array = (byte*)s;
+	syscall_envs.len = n;
+	syscall_envs.cap = n;
 }
 
 byte*
-runtime·getenv(int8 *s)
+runtime_getenv(int8 *s)
 {
 	int32 i, j, len;
 	byte *v, *bs;
@@ -219,9 +219,9 @@ runtime·getenv(int8 *s)
 	int32 envc;
 
 	bs = (byte*)s;
-	len = runtime·findnull(bs);
-	envv = (String*)syscall·envs.array;
-	envc = syscall·envs.len;
+	len = runtime_findnull(bs);
+	envv = (String*)syscall_envs.array;
+	envc = syscall_envs.len;
 	for(i=0; i<envc; i++){
 		if(envv[i].len <= len)
 			continue;
@@ -238,17 +238,17 @@ runtime·getenv(int8 *s)
 }
 
 void
-runtime·getgoroot(String out)
+runtime_getgoroot(String out)
 {
 	byte *p;
 
-	p = runtime·getenv("GOROOT");
-	out = runtime·gostringnocopy(p);
+	p = runtime_getenv("GOROOT");
+	out = runtime_gostringnocopy(p);
 	FLUSH(&out);
 }
 
 int32
-runtime·atoi(byte *p)
+runtime_atoi(byte *p)
 {
 	int32 n;
 
@@ -259,7 +259,7 @@ runtime·atoi(byte *p)
 }
 
 void
-runtime·check(void)
+runtime_check(void)
 {
 	int8 a;
 	uint8 b;
@@ -281,62 +281,62 @@ runtime·check(void)
 		byte y;
 	};
 
-	if(sizeof(a) != 1) runtime·throw("bad a");
-	if(sizeof(b) != 1) runtime·throw("bad b");
-	if(sizeof(c) != 2) runtime·throw("bad c");
-	if(sizeof(d) != 2) runtime·throw("bad d");
-	if(sizeof(e) != 4) runtime·throw("bad e");
-	if(sizeof(f) != 4) runtime·throw("bad f");
-	if(sizeof(g) != 8) runtime·throw("bad g");
-	if(sizeof(h) != 8) runtime·throw("bad h");
-	if(sizeof(i) != 4) runtime·throw("bad i");
-	if(sizeof(j) != 8) runtime·throw("bad j");
-	if(sizeof(k) != sizeof(uintptr)) runtime·throw("bad k");
-	if(sizeof(l) != sizeof(uintptr)) runtime·throw("bad l");
-	if(sizeof(struct x1) != 1) runtime·throw("bad sizeof x1");
-	if(offsetof(struct y1, y) != 1) runtime·throw("bad offsetof y1.y");
-	if(sizeof(struct y1) != 2) runtime·throw("bad sizeof y1");
+	if(sizeof(a) != 1) runtime_throw("bad a");
+	if(sizeof(b) != 1) runtime_throw("bad b");
+	if(sizeof(c) != 2) runtime_throw("bad c");
+	if(sizeof(d) != 2) runtime_throw("bad d");
+	if(sizeof(e) != 4) runtime_throw("bad e");
+	if(sizeof(f) != 4) runtime_throw("bad f");
+	if(sizeof(g) != 8) runtime_throw("bad g");
+	if(sizeof(h) != 8) runtime_throw("bad h");
+	if(sizeof(i) != 4) runtime_throw("bad i");
+	if(sizeof(j) != 8) runtime_throw("bad j");
+	if(sizeof(k) != sizeof(uintptr)) runtime_throw("bad k");
+	if(sizeof(l) != sizeof(uintptr)) runtime_throw("bad l");
+	if(sizeof(struct x1) != 1) runtime_throw("bad sizeof x1");
+	if(offsetof(struct y1, y) != 1) runtime_throw("bad offsetof y1.y");
+	if(sizeof(struct y1) != 2) runtime_throw("bad sizeof y1");
 
 	uint32 z;
 	z = 1;
-	if(!runtime·cas(&z, 1, 2))
-		runtime·throw("cas1");
+	if(!runtime_cas(&z, 1, 2))
+		runtime_throw("cas1");
 	if(z != 2)
-		runtime·throw("cas2");
+		runtime_throw("cas2");
 
 	z = 4;
-	if(runtime·cas(&z, 5, 6))
-		runtime·throw("cas3");
+	if(runtime_cas(&z, 5, 6))
+		runtime_throw("cas3");
 	if(z != 4)
-		runtime·throw("cas4");
+		runtime_throw("cas4");
 
 	*(uint64*)&j = ~0ULL;
 	if(j == j)
-		runtime·throw("float64nan");
+		runtime_throw("float64nan");
 	if(!(j != j))
-		runtime·throw("float64nan1");
+		runtime_throw("float64nan1");
 
 	*(uint64*)&j1 = ~1ULL;
 	if(j == j1)
-		runtime·throw("float64nan2");
+		runtime_throw("float64nan2");
 	if(!(j != j1))
-		runtime·throw("float64nan3");
+		runtime_throw("float64nan3");
 
 	*(uint32*)&i = ~0UL;
 	if(i == i)
-		runtime·throw("float32nan");
+		runtime_throw("float32nan");
 	if(!(i != i))
-		runtime·throw("float32nan1");
+		runtime_throw("float32nan1");
 
 	*(uint32*)&i1 = ~1UL;
 	if(i == i1)
-		runtime·throw("float32nan2");
+		runtime_throw("float32nan2");
 	if(!(i != i1))
-		runtime·throw("float32nan3");
+		runtime_throw("float32nan3");
 }
 
 void
-runtime·Caller(int32 skip, uintptr retpc, String retfile, int32 retline, bool retbool)
+runtime_Caller(int32 skip, uintptr retpc, String retfile, int32 retline, bool retbool)
 {
 	Func *f, *g;
 	uintptr pc;
@@ -348,22 +348,22 @@ runtime·Caller(int32 skip, uintptr retpc, String retfile, int32 retline, bool r
 	 * "called" sigpanic.
 	 */
 	retpc = 0;
-	if(runtime·callers(1+skip-1, rpc, 2) < 2) {
-		retfile = runtime·emptystring;
+	if(runtime_callers(1+skip-1, rpc, 2) < 2) {
+		retfile = runtime_emptystring;
 		retline = 0;
 		retbool = false;
-	} else if((f = runtime·findfunc(rpc[1])) == nil) {
-		retfile = runtime·emptystring;
+	} else if((f = runtime_findfunc(rpc[1])) == nil) {
+		retfile = runtime_emptystring;
 		retline = 0;
 		retbool = true;  // have retpc at least
 	} else {
 		retpc = rpc[1];
 		retfile = f->src;
 		pc = retpc;
-		g = runtime·findfunc(rpc[0]);
-		if(pc > f->entry && (g == nil || g->entry != (uintptr)runtime·sigpanic))
+		g = runtime_findfunc(rpc[0]);
+		if(pc > f->entry && (g == nil || g->entry != (uintptr)runtime_sigpanic))
 			pc--;
-		retline = runtime·funcline(f, pc);
+		retline = runtime_funcline(f, pc);
 		retbool = true;
 	}
 	FLUSH(&retpc);
@@ -373,7 +373,7 @@ runtime·Caller(int32 skip, uintptr retpc, String retfile, int32 retline, bool r
 }
 
 void
-runtime·Callers(int32 skip, Slice pc, int32 retn)
+runtime_Callers(int32 skip, Slice pc, int32 retn)
 {
 	// runtime.callers uses pc.array==nil as a signal
 	// to print a stack trace.  Pick off 0-length pc here
@@ -381,19 +381,19 @@ runtime·Callers(int32 skip, Slice pc, int32 retn)
 	if(pc.len == 0)
 		retn = 0;
 	else
-		retn = runtime·callers(skip, (uintptr*)pc.array, pc.len);
+		retn = runtime_callers(skip, (uintptr*)pc.array, pc.len);
 	FLUSH(&retn);
 }
 
 void
-runtime·FuncForPC(uintptr pc, void *retf)
+runtime_FuncForPC(uintptr pc, void *retf)
 {
-	retf = runtime·findfunc(pc);
+	retf = runtime_findfunc(pc);
 	FLUSH(&retf);
 }
 
 uint32
-runtime·fastrand1(void)
+runtime_fastrand1(void)
 {
 	uint32 x;
 

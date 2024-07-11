@@ -8,13 +8,13 @@
 
 // This implementation depends on OS-specific implementations of
 //
-//	runtime·futexsleep(uint32 *addr, uint32 val, int64 ns)
+//	runtime_futexsleep(uint32 *addr, uint32 val, int64 ns)
 //		Atomically,
 //			if(*addr == val) sleep
 //		Might be woken up spuriously; that's allowed.
 //		Don't sleep longer than ns; ns < 0 means forever.
 //
-//	runtime·futexwakeup(uint32 *addr, uint32 cnt)
+//	runtime_futexwakeup(uint32 *addr, uint32 cnt)
 //		If any procs are sleeping on addr, wake up at most cnt.
 
 enum
@@ -33,15 +33,15 @@ enum
 // Note that there can be spinning threads during all states - they do not
 // affect mutex's state.
 void
-runtime·lock(Lock *l)
+runtime_lock(Lock *l)
 {
 	uint32 i, v, wait, spin;
 
 	if(m->locks++ < 0)
-		runtime·throw("runtime·lock: lock count");
+		runtime_throw("runtime_lock: lock count");
 
 	// Speculative grab for lock.
-	v = runtime·xchg(&l->key, MUTEX_LOCKED);
+	v = runtime_xchg(&l->key, MUTEX_LOCKED);
 	if(v == MUTEX_UNLOCKED)
 		return;
 
@@ -57,100 +57,100 @@ runtime·lock(Lock *l)
 	// On uniprocessor's, no point spinning.
 	// On multiprocessors, spin for ACTIVE_SPIN attempts.
 	spin = 0;
-	if(runtime·ncpu > 1)
+	if(runtime_ncpu > 1)
 		spin = ACTIVE_SPIN;
 
 	for(;;) {
 		// Try for lock, spinning.
 		for(i = 0; i < spin; i++) {
 			while(l->key == MUTEX_UNLOCKED)
-				if(runtime·cas(&l->key, MUTEX_UNLOCKED, wait))
+				if(runtime_cas(&l->key, MUTEX_UNLOCKED, wait))
 					return;
-			runtime·procyield(ACTIVE_SPIN_CNT);
+			runtime_procyield(ACTIVE_SPIN_CNT);
 		}
 
 		// Try for lock, rescheduling.
 		for(i=0; i < PASSIVE_SPIN; i++) {
 			while(l->key == MUTEX_UNLOCKED)
-				if(runtime·cas(&l->key, MUTEX_UNLOCKED, wait))
+				if(runtime_cas(&l->key, MUTEX_UNLOCKED, wait))
 					return;
-			runtime·osyield();
+			runtime_osyield();
 		}
 
 		// Sleep.
-		v = runtime·xchg(&l->key, MUTEX_SLEEPING);
+		v = runtime_xchg(&l->key, MUTEX_SLEEPING);
 		if(v == MUTEX_UNLOCKED)
 			return;
 		wait = MUTEX_SLEEPING;
-		runtime·futexsleep(&l->key, MUTEX_SLEEPING, -1);
+		runtime_futexsleep(&l->key, MUTEX_SLEEPING, -1);
 	}
 }
 
 void
-runtime·unlock(Lock *l)
+runtime_unlock(Lock *l)
 {
 	uint32 v;
 
 	if(--m->locks < 0)
-		runtime·throw("runtime·unlock: lock count");
+		runtime_throw("runtime_unlock: lock count");
 
-	v = runtime·xchg(&l->key, MUTEX_UNLOCKED);
+	v = runtime_xchg(&l->key, MUTEX_UNLOCKED);
 	if(v == MUTEX_UNLOCKED)
-		runtime·throw("unlock of unlocked lock");
+		runtime_throw("unlock of unlocked lock");
 	if(v == MUTEX_SLEEPING)
-		runtime·futexwakeup(&l->key, 1);
+		runtime_futexwakeup(&l->key, 1);
 }
 
 // One-time notifications.
 void
-runtime·noteclear(Note *n)
+runtime_noteclear(Note *n)
 {
 	n->key = 0;
 }
 
 void
-runtime·notewakeup(Note *n)
+runtime_notewakeup(Note *n)
 {
-	runtime·xchg(&n->key, 1);
-	runtime·futexwakeup(&n->key, 1);
+	runtime_xchg(&n->key, 1);
+	runtime_futexwakeup(&n->key, 1);
 }
 
 void
-runtime·notesleep(Note *n)
+runtime_notesleep(Note *n)
 {
 	if(m->profilehz > 0)
-		runtime·setprof(false);
-	while(runtime·atomicload(&n->key) == 0)
-		runtime·futexsleep(&n->key, 0, -1);
+		runtime_setprof(false);
+	while(runtime_atomicload(&n->key) == 0)
+		runtime_futexsleep(&n->key, 0, -1);
 	if(m->profilehz > 0)
-		runtime·setprof(true);
+		runtime_setprof(true);
 }
 
 void
-runtime·notetsleep(Note *n, int64 ns)
+runtime_notetsleep(Note *n, int64 ns)
 {
 	int64 deadline, now;
 
 	if(ns < 0) {
-		runtime·notesleep(n);
+		runtime_notesleep(n);
 		return;
 	}
 
-	if(runtime·atomicload(&n->key) != 0)
+	if(runtime_atomicload(&n->key) != 0)
 		return;
 
 	if(m->profilehz > 0)
-		runtime·setprof(false);
-	deadline = runtime·nanotime() + ns;
+		runtime_setprof(false);
+	deadline = runtime_nanotime() + ns;
 	for(;;) {
-		runtime·futexsleep(&n->key, 0, ns);
-		if(runtime·atomicload(&n->key) != 0)
+		runtime_futexsleep(&n->key, 0, ns);
+		if(runtime_atomicload(&n->key) != 0)
 			break;
-		now = runtime·nanotime();
+		now = runtime_nanotime();
 		if(now >= deadline)
 			break;
 		ns = deadline - now;
 	}
 	if(m->profilehz > 0)
-		runtime·setprof(true);
+		runtime_setprof(true);
 }

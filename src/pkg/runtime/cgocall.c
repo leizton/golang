@@ -90,15 +90,15 @@ static void unwindm(void);
 // Call from Go to C.
 
 void
-runtime·cgocall(void (*fn)(void*), void *arg)
+runtime_cgocall(void (*fn)(void*), void *arg)
 {
 	Defer d;
 
-	if(!runtime·iscgo && !Windows)
-		runtime·throw("cgocall unavailable");
+	if(!runtime_iscgo && !Windows)
+		runtime_throw("cgocall unavailable");
 
 	if(fn == 0)
-		runtime·throw("cgocall nil");
+		runtime_throw("cgocall nil");
 
 	m->ncgocall++;
 
@@ -131,13 +131,13 @@ runtime·cgocall(void (*fn)(void*), void *arg)
 	 * so it is safe to call while "in a system call", outside
 	 * the $GOMAXPROCS accounting.
 	 */
-	runtime·entersyscall();
-	runtime·asmcgocall(fn, arg);
-	runtime·exitsyscall();
+	runtime_entersyscall();
+	runtime_asmcgocall(fn, arg);
+	runtime_exitsyscall();
 
 	if(d.nofree) {
 		if(g->defer != &d || d.fn != (byte*)unlockm)
-			runtime·throw("runtime: bad defer entry in cgocallback");
+			runtime_throw("runtime: bad defer entry in cgocallback");
 		g->defer = d.link;
 		unlockm();
 	}
@@ -151,12 +151,12 @@ unlockm(void)
 }
 
 void
-runtime·NumCgoCall(int64 ret)
+runtime_NumCgoCall(int64 ret)
 {
 	M *m;
 
 	ret = 0;
-	for(m=runtime·atomicloadp(&runtime·allm); m; m=m->alllink)
+	for(m=runtime_atomicloadp(&runtime_allm); m; m=m->alllink)
 		ret += m->ncgocall;
 	FLUSH(&ret);
 }
@@ -167,7 +167,7 @@ void (*_cgo_malloc)(void*);
 void (*_cgo_free)(void*);
 
 void*
-runtime·cmalloc(uintptr n)
+runtime_cmalloc(uintptr n)
 {
 	struct {
 		uint64 n;
@@ -176,27 +176,27 @@ runtime·cmalloc(uintptr n)
 
 	a.n = n;
 	a.ret = nil;
-	runtime·cgocall(_cgo_malloc, &a);
+	runtime_cgocall(_cgo_malloc, &a);
 	return a.ret;
 }
 
 void
-runtime·cfree(void *p)
+runtime_cfree(void *p)
 {
-	runtime·cgocall(_cgo_free, p);
+	runtime_cgocall(_cgo_free, p);
 }
 
 // Call from C back to Go.
 
 void
-runtime·cgocallbackg(void (*fn)(void), void *arg, uintptr argsize)
+runtime_cgocallbackg(void (*fn)(void), void *arg, uintptr argsize)
 {
 	Defer d;
 
 	if(g != m->curg)
-		runtime·throw("runtime: bad g in cgocallback");
+		runtime_throw("runtime: bad g in cgocallback");
 
-	runtime·exitsyscall();	// coming out of cgo call
+	runtime_exitsyscall();	// coming out of cgo call
 
 	// Add entry to defer stack in case of panic.
 	d.fn = (byte*)unwindm;
@@ -207,16 +207,16 @@ runtime·cgocallbackg(void (*fn)(void), void *arg, uintptr argsize)
 	g->defer = &d;
 
 	// Invoke callback.
-	reflect·call((byte*)fn, arg, argsize);
+	reflect_call((byte*)fn, arg, argsize);
 
 	// Pop defer.
 	// Do not unwind m->g0->sched.sp.
 	// Our caller, cgocallback, will do that.
 	if(g->defer != &d || d.fn != (byte*)unwindm)
-		runtime·throw("runtime: bad defer entry in cgocallback");
+		runtime_throw("runtime: bad defer entry in cgocallback");
 	g->defer = d.link;
 
-	runtime·entersyscall();	// going back to cgo call
+	runtime_entersyscall();	// going back to cgo call
 }
 
 static void
@@ -226,7 +226,7 @@ unwindm(void)
 	// unwind of g's stack (see comment at top of file).
 	switch(thechar){
 	default:
-		runtime·throw("runtime: unwindm not implemented");
+		runtime_throw("runtime: unwindm not implemented");
 	case '8':
 	case '6':
 		m->g0->sched.sp = *(void**)m->g0->sched.sp;
@@ -235,13 +235,13 @@ unwindm(void)
 }
 
 void
-runtime·badcgocallback(void)	// called from assembly
+runtime_badcgocallback(void)	// called from assembly
 {
-	runtime·throw("runtime: misaligned stack in cgocallback");
+	runtime_throw("runtime: misaligned stack in cgocallback");
 }
 
 void
-runtime·cgounimpl(void)	// called from (incomplete) assembly
+runtime_cgounimpl(void)	// called from (incomplete) assembly
 {
-	runtime·throw("runtime: cgo not implemented");
+	runtime_throw("runtime: cgo not implemented");
 }

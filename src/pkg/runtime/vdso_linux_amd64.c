@@ -159,13 +159,13 @@ struct vdso_info {
 static version_key linux26 = { (byte*)"LINUX_2.6", 0x3ae75f6 };
 
 // initialize with vsyscall fallbacks
-void* runtime·__vdso_time_sym = (void*)0xffffffffff600400ULL;
-void* runtime·__vdso_gettimeofday_sym = (void*)0xffffffffff600000ULL;
+void* runtime___vdso_time_sym = (void*)0xffffffffff600400ULL;
+void* runtime___vdso_gettimeofday_sym = (void*)0xffffffffff600000ULL;
 
 #define SYM_KEYS_COUNT 2
 static symbol_key sym_keys[] = {
-	{ (byte*)"__vdso_time", &runtime·__vdso_time_sym },
-	{ (byte*)"__vdso_gettimeofday", &runtime·__vdso_gettimeofday_sym },
+	{ (byte*)"__vdso_time", &runtime___vdso_time_sym },
+	{ (byte*)"__vdso_gettimeofday", &runtime___vdso_gettimeofday_sym },
 };
 
 static void vdso_init_from_sysinfo_ehdr(struct vdso_info *vdso_info, Elf64_Ehdr* hdr) {
@@ -244,7 +244,7 @@ static int32 vdso_find_version(struct vdso_info *vdso_info, version_key* ver) {
 		if((def->vd_flags & VER_FLG_BASE) == 0) {
 			Elf64_Verdaux *aux = (Elf64_Verdaux*)((byte *)def + def->vd_aux);
 			if(def->vd_hash == ver->ver_hash &&
-				runtime·strcmp(ver->version, vdso_info->symstrings + aux->vda_name) == 0) {
+				runtime_strcmp(ver->version, vdso_info->symstrings + aux->vda_name) == 0) {
 				return def->vd_ndx & 0x7fff;
 			}
 		}
@@ -276,7 +276,7 @@ static void vdso_parse_symbols(struct vdso_info *vdso_info, int32 version) {
 			continue;
 
 		for(j=0; j<SYM_KEYS_COUNT; j++) {
-			if(runtime·strcmp(sym_keys[j].name, vdso_info->symstrings + sym->st_name) != 0)
+			if(runtime_strcmp(sym_keys[j].name, vdso_info->symstrings + sym->st_name) != 0)
 				continue;
 
 			// Check symbol version.
@@ -290,7 +290,7 @@ static void vdso_parse_symbols(struct vdso_info *vdso_info, int32 version) {
 }
 
 static void
-runtime·linux_setup_vdso(int32 argc, uint8** argv)
+runtime_linux_setup_vdso(int32 argc, uint8** argv)
 {
 	struct vdso_info vdso_info;
 
@@ -320,4 +320,4 @@ runtime·linux_setup_vdso(int32 argc, uint8** argv)
 	}
 }
 
-void (*runtime·sysargs)(int32, uint8**) = runtime·linux_setup_vdso;
+void (*runtime_sysargs)(int32, uint8**) = runtime_linux_setup_vdso;

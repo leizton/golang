@@ -8,7 +8,7 @@
 #define P SigPanic
 #define D SigDefault
 
-SigTab runtime·sigtab[] = {
+SigTab runtime_sigtab[] = {
 	/* 0 */	0, "SIGNONE: no trap",
 	/* 1 */	N+K, "SIGHUP: terminal line hangup",
 	/* 2 */	N+K, "SIGINT: interrupt",

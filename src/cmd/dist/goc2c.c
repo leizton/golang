@@ -487,7 +487,7 @@ write_6g_func_header(char *package, char *name, struct params *params,
 {
 	int first, n;
 
-	bwritef(output, "void\n%s·%s(", package, name);
+	bwritef(output, "void\n%s_%s(", package, name);
 	first = 1;
 	write_params(params, &first);
 

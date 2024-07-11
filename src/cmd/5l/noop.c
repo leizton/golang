@@ -66,7 +66,7 @@ noops(void)
 
 	symmorestack = lookup("runtime.morestack", 0);
 	if(symmorestack->type != STEXT) {
-		diag("runtime·morestack not defined");
+		diag("runtime_morestack not defined");
 		errorexit();
 	}
 	pmorestack = symmorestack->text;

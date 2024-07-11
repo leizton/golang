@@ -13,7 +13,7 @@
  * dealing with unknown types
  */
 void
-runtime·memhash(uintptr *h, uintptr s, void *a)
+runtime_memhash(uintptr *h, uintptr s, void *a)
 {
 	byte *b;
 	uintptr hash;
@@ -29,7 +29,7 @@ runtime·memhash(uintptr *h, uintptr s, void *a)
 }
 
 void
-runtime·memequal(bool *eq, uintptr s, void *a, void *b)
+runtime_memequal(bool *eq, uintptr s, void *a, void *b)
 {
 	byte *ba, *bb, *aend;
 
@@ -53,7 +53,7 @@ runtime·memequal(bool *eq, uintptr s, void *a, void *b)
 }
 
 void
-runtime·memprint(uintptr s, void *a)
+runtime_memprint(uintptr s, void *a)
 {
 	uint64 v;
 
@@ -72,21 +72,21 @@ runtime·memprint(uintptr s, void *a)
 		v = *(uint64*)a;
 		break;
 	}
-	runtime·printint(v);
+	runtime_printint(v);
 }
 
 void
-runtime·memcopy(uintptr s, void *a, void *b)
+runtime_memcopy(uintptr s, void *a, void *b)
 {
 	if(b == nil) {
-		runtime·memclr(a, s);
+		runtime_memclr(a, s);
 		return;
 	}
-	runtime·memmove(a, b, s);
+	runtime_memmove(a, b, s);
 }
 
 void
-runtime·memequal0(bool *eq, uintptr s, void *a, void *b)
+runtime_memequal0(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	USED(a);
@@ -95,7 +95,7 @@ runtime·memequal0(bool *eq, uintptr s, void *a, void *b)
 }
 
 void
-runtime·memcopy0(uintptr s, void *a, void *b)
+runtime_memcopy0(uintptr s, void *a, void *b)
 {
 	USED(s);
 	USED(a);
@@ -103,14 +103,14 @@ runtime·memcopy0(uintptr s, void *a, void *b)
 }
 
 void
-runtime·memequal8(bool *eq, uintptr s, void *a, void *b)
+runtime_memequal8(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	*eq = *(uint8*)a == *(uint8*)b;
 }
 
 void
-runtime·memcopy8(uintptr s, void *a, void *b)
+runtime_memcopy8(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -121,14 +121,14 @@ runtime·memcopy8(uintptr s, void *a, void *b)
 }
 
 void
-runtime·memequal16(bool *eq, uintptr s, void *a, void *b)
+runtime_memequal16(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	*eq = *(uint16*)a == *(uint16*)b;
 }
 
 void
-runtime·memcopy16(uintptr s, void *a, void *b)
+runtime_memcopy16(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -139,14 +139,14 @@ runtime·memcopy16(uintptr s, void *a, void *b)
 }
 
 void
-runtime·memequal32(bool *eq, uintptr s, void *a, void *b)
+runtime_memequal32(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	*eq = *(uint32*)a == *(uint32*)b;
 }
 
 void
-runtime·memcopy32(uintptr s, void *a, void *b)
+runtime_memcopy32(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -157,14 +157,14 @@ runtime·memcopy32(uintptr s, void *a, void *b)
 }
 
 void
-runtime·memequal64(bool *eq, uintptr s, void *a, void *b)
+runtime_memequal64(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	*eq = *(uint64*)a == *(uint64*)b;
 }
 
 void
-runtime·memcopy64(uintptr s, void *a, void *b)
+runtime_memcopy64(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -175,14 +175,14 @@ runtime·memcopy64(uintptr s, void *a, void *b)
 }
 
 void
-runtime·memequal128(bool *eq, uintptr s, void *a, void *b)
+runtime_memequal128(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	*eq = ((uint64*)a)[0] == ((uint64*)b)[0] && ((uint64*)a)[1] == ((uint64*)b)[1];
 }
 
 void
-runtime·memcopy128(uintptr s, void *a, void *b)
+runtime_memcopy128(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -195,21 +195,21 @@ runtime·memcopy128(uintptr s, void *a, void *b)
 }
 
 void
-runtime·f32equal(bool *eq, uintptr s, void *a, void *b)
+runtime_f32equal(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	*eq = *(float32*)a == *(float32*)b;
 }
 
 void
-runtime·f64equal(bool *eq, uintptr s, void *a, void *b)
+runtime_f64equal(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	*eq = *(float64*)a == *(float64*)b;
 }
 
 void
-runtime·c64equal(bool *eq, uintptr s, void *a, void *b)
+runtime_c64equal(bool *eq, uintptr s, void *a, void *b)
 {	
 	Complex64 *ca, *cb;
 	
@@ -220,7 +220,7 @@ runtime·c64equal(bool *eq, uintptr s, void *a, void *b)
 }
 
 void
-runtime·c128equal(bool *eq, uintptr s, void *a, void *b)
+runtime_c128equal(bool *eq, uintptr s, void *a, void *b)
 {	
 	Complex128 *ca, *cb;
 	
@@ -236,7 +236,7 @@ runtime·c128equal(bool *eq, uintptr s, void *a, void *b)
 // as the hash value for a NaN.
 
 void
-runtime·f32hash(uintptr *h, uintptr s, void *a)
+runtime_f32hash(uintptr *h, uintptr s, void *a)
 {
 	uintptr hash;
 	float32 f;
@@ -246,14 +246,14 @@ runtime·f32hash(uintptr *h, uintptr s, void *a)
 	if(f == 0)
 		hash = 0;  // +0, -0
 	else if(f != f)
-		hash = runtime·fastrand1();  // any kind of NaN
+		hash = runtime_fastrand1();  // any kind of NaN
 	else
 		hash = *(uint32*)a;
 	*h = (*h ^ hash ^ M0) * M1;
 }
 
 void
-runtime·f64hash(uintptr *h, uintptr s, void *a)
+runtime_f64hash(uintptr *h, uintptr s, void *a)
 {
 	uintptr hash;
 	float64 f;
@@ -264,7 +264,7 @@ runtime·f64hash(uintptr *h, uintptr s, void *a)
 	if(f == 0)
 		hash = 0;	// +0, -0
 	else if(f != f)
-		hash = runtime·fastrand1();  // any kind of NaN
+		hash = runtime_fastrand1();  // any kind of NaN
 	else {
 		u = *(uint64*)a;
 		if(sizeof(uintptr) == 4)
@@ -276,23 +276,23 @@ runtime·f64hash(uintptr *h, uintptr s, void *a)
 }
 
 void
-runtime·c64hash(uintptr *h, uintptr s, void *a)
+runtime_c64hash(uintptr *h, uintptr s, void *a)
 {
 	USED(s);
-	runtime·f32hash(h, 0, a);
-	runtime·f32hash(h, 0, (float32*)a+1);
+	runtime_f32hash(h, 0, a);
+	runtime_f32hash(h, 0, (float32*)a+1);
 }
 
 void
-runtime·c128hash(uintptr *h, uintptr s, void *a)
+runtime_c128hash(uintptr *h, uintptr s, void *a)
 {
 	USED(s);
-	runtime·f64hash(h, 0, a);
-	runtime·f64hash(h, 0, (float64*)a+1);
+	runtime_f64hash(h, 0, a);
+	runtime_f64hash(h, 0, (float64*)a+1);
 }
 
 void
-runtime·slicecopy(uintptr s, void *a, void *b)
+runtime_slicecopy(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -307,14 +307,14 @@ runtime·slicecopy(uintptr s, void *a, void *b)
 }
 
 void
-runtime·strhash(uintptr *h, uintptr s, void *a)
+runtime_strhash(uintptr *h, uintptr s, void *a)
 {
 	USED(s);
-	runtime·memhash(h, ((String*)a)->len, ((String*)a)->str);
+	runtime_memhash(h, ((String*)a)->len, ((String*)a)->str);
 }
 
 void
-runtime·strequal(bool *eq, uintptr s, void *a, void *b)
+runtime_strequal(bool *eq, uintptr s, void *a, void *b)
 {
 	int32 alen;
 
@@ -324,18 +324,18 @@ runtime·strequal(bool *eq, uintptr s, void *a, void *b)
 		*eq = false;
 		return;
 	}
-	runtime·memequal(eq, alen, ((String*)a)->str, ((String*)b)->str);
+	runtime_memequal(eq, alen, ((String*)a)->str, ((String*)b)->str);
 }
 
 void
-runtime·strprint(uintptr s, void *a)
+runtime_strprint(uintptr s, void *a)
 {
 	USED(s);
-	runtime·printstring(*(String*)a);
+	runtime_printstring(*(String*)a);
 }
 
 void
-runtime·strcopy(uintptr s, void *a, void *b)
+runtime_strcopy(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -348,28 +348,28 @@ runtime·strcopy(uintptr s, void *a, void *b)
 }
 
 void
-runtime·interhash(uintptr *h, uintptr s, void *a)
+runtime_interhash(uintptr *h, uintptr s, void *a)
 {
 	USED(s);
-	*h = (*h ^ runtime·ifacehash(*(Iface*)a)) * M1;
+	*h = (*h ^ runtime_ifacehash(*(Iface*)a)) * M1;
 }
 
 void
-runtime·interprint(uintptr s, void *a)
+runtime_interprint(uintptr s, void *a)
 {
 	USED(s);
-	runtime·printiface(*(Iface*)a);
+	runtime_printiface(*(Iface*)a);
 }
 
 void
-runtime·interequal(bool *eq, uintptr s, void *a, void *b)
+runtime_interequal(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
-	*eq = runtime·ifaceeq_c(*(Iface*)a, *(Iface*)b);
+	*eq = runtime_ifaceeq_c(*(Iface*)a, *(Iface*)b);
 }
 
 void
-runtime·intercopy(uintptr s, void *a, void *b)
+runtime_intercopy(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -382,28 +382,28 @@ runtime·intercopy(uintptr s, void *a, void *b)
 }
 
 void
-runtime·nilinterhash(uintptr *h, uintptr s, void *a)
+runtime_nilinterhash(uintptr *h, uintptr s, void *a)
 {
 	USED(s);
-	*h = (*h ^ runtime·efacehash(*(Eface*)a)) * M1;
+	*h = (*h ^ runtime_efacehash(*(Eface*)a)) * M1;
 }
 
 void
-runtime·nilinterprint(uintptr s, void *a)
+runtime_nilinterprint(uintptr s, void *a)
 {
 	USED(s);
-	runtime·printeface(*(Eface*)a);
+	runtime_printeface(*(Eface*)a);
 }
 
 void
-runtime·nilinterequal(bool *eq, uintptr s, void *a, void *b)
+runtime_nilinterequal(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
-	*eq = runtime·efaceeq_c(*(Eface*)a, *(Eface*)b);
+	*eq = runtime_efaceeq_c(*(Eface*)a, *(Eface*)b);
 }
 
 void
-runtime·nilintercopy(uintptr s, void *a, void *b)
+runtime_nilintercopy(uintptr s, void *a, void *b)
 {
 	USED(s);
 	if(b == nil) {
@@ -416,49 +416,49 @@ runtime·nilintercopy(uintptr s, void *a, void *b)
 }
 
 void
-runtime·nohash(uintptr *h, uintptr s, void *a)
+runtime_nohash(uintptr *h, uintptr s, void *a)
 {
 	USED(s);
 	USED(a);
 	USED(h);
-	runtime·panicstring("hash of unhashable type");
+	runtime_panicstring("hash of unhashable type");
 }
 
 void
-runtime·noequal(bool *eq, uintptr s, void *a, void *b)
+runtime_noequal(bool *eq, uintptr s, void *a, void *b)
 {
 	USED(s);
 	USED(a);
 	USED(b);
 	USED(eq);
-	runtime·panicstring("comparing uncomparable types");
+	runtime_panicstring("comparing uncomparable types");
 }
 
 Alg
-runtime·algarray[] =
+runtime_algarray[] =
 {
-[AMEM]		{ runtime·memhash, runtime·memequal, runtime·memprint, runtime·memcopy },
-[ANOEQ]		{ runtime·nohash, runtime·noequal, runtime·memprint, runtime·memcopy },
-[ASTRING]	{ runtime·strhash, runtime·strequal, runtime·strprint, runtime·strcopy },
-[AINTER]	{ runtime·interhash, runtime·interequal, runtime·interprint, runtime·intercopy },
-[ANILINTER]	{ runtime·nilinterhash, runtime·nilinterequal, runtime·nilinterprint, runtime·nilintercopy },
-[ASLICE]	{ runtime·nohash, runtime·noequal, runtime·memprint, runtime·slicecopy },
-[AFLOAT32]	{ runtime·f32hash, runtime·f32equal, runtime·memprint, runtime·memcopy },
-[AFLOAT64]	{ runtime·f64hash, runtime·f64equal, runtime·memprint, runtime·memcopy },
-[ACPLX64]	{ runtime·c64hash, runtime·c64equal, runtime·memprint, runtime·memcopy },
-[ACPLX128]	{ runtime·c128hash, runtime·c128equal, runtime·memprint, runtime·memcopy },
-[AMEM0]		{ runtime·memhash, runtime·memequal0, runtime·memprint, runtime·memcopy0 },
-[AMEM8]		{ runtime·memhash, runtime·memequal8, runtime·memprint, runtime·memcopy8 },
-[AMEM16]	{ runtime·memhash, runtime·memequal16, runtime·memprint, runtime·memcopy16 },
-[AMEM32]	{ runtime·memhash, runtime·memequal32, runtime·memprint, runtime·memcopy32 },
-[AMEM64]	{ runtime·memhash, runtime·memequal64, runtime·memprint, runtime·memcopy64 },
-[AMEM128]	{ runtime·memhash, runtime·memequal128, runtime·memprint, runtime·memcopy128 },
-[ANOEQ0]	{ runtime·nohash, runtime·noequal, runtime·memprint, runtime·memcopy0 },
-[ANOEQ8]	{ runtime·nohash, runtime·noequal, runtime·memprint, runtime·memcopy8 },
-[ANOEQ16]	{ runtime·nohash, runtime·noequal, runtime·memprint, runtime·memcopy16 },
-[ANOEQ32]	{ runtime·nohash, runtime·noequal, runtime·memprint, runtime·memcopy32 },
-[ANOEQ64]	{ runtime·nohash, runtime·noequal, runtime·memprint, runtime·memcopy64 },
-[ANOEQ128]	{ runtime·nohash, runtime·noequal, runtime·memprint, runtime·memcopy128 },
+[AMEM]		{ runtime_memhash, runtime_memequal, runtime_memprint, runtime_memcopy },
+[ANOEQ]		{ runtime_nohash, runtime_noequal, runtime_memprint, runtime_memcopy },
+[ASTRING]	{ runtime_strhash, runtime_strequal, runtime_strprint, runtime_strcopy },
+[AINTER]	{ runtime_interhash, runtime_interequal, runtime_interprint, runtime_intercopy },
+[ANILINTER]	{ runtime_nilinterhash, runtime_nilinterequal, runtime_nilinterprint, runtime_nilintercopy },
+[ASLICE]	{ runtime_nohash, runtime_noequal, runtime_memprint, runtime_slicecopy },
+[AFLOAT32]	{ runtime_f32hash, runtime_f32equal, runtime_memprint, runtime_memcopy },
+[AFLOAT64]	{ runtime_f64hash, runtime_f64equal, runtime_memprint, runtime_memcopy },
+[ACPLX64]	{ runtime_c64hash, runtime_c64equal, runtime_memprint, runtime_memcopy },
+[ACPLX128]	{ runtime_c128hash, runtime_c128equal, runtime_memprint, runtime_memcopy },
+[AMEM0]		{ runtime_memhash, runtime_memequal0, runtime_memprint, runtime_memcopy0 },
+[AMEM8]		{ runtime_memhash, runtime_memequal8, runtime_memprint, runtime_memcopy8 },
+[AMEM16]	{ runtime_memhash, runtime_memequal16, runtime_memprint, runtime_memcopy16 },
+[AMEM32]	{ runtime_memhash, runtime_memequal32, runtime_memprint, runtime_memcopy32 },
+[AMEM64]	{ runtime_memhash, runtime_memequal64, runtime_memprint, runtime_memcopy64 },
+[AMEM128]	{ runtime_memhash, runtime_memequal128, runtime_memprint, runtime_memcopy128 },
+[ANOEQ0]	{ runtime_nohash, runtime_noequal, runtime_memprint, runtime_memcopy0 },
+[ANOEQ8]	{ runtime_nohash, runtime_noequal, runtime_memprint, runtime_memcopy8 },
+[ANOEQ16]	{ runtime_nohash, runtime_noequal, runtime_memprint, runtime_memcopy16 },
+[ANOEQ32]	{ runtime_nohash, runtime_noequal, runtime_memprint, runtime_memcopy32 },
+[ANOEQ64]	{ runtime_nohash, runtime_noequal, runtime_memprint, runtime_memcopy64 },
+[ANOEQ128]	{ runtime_nohash, runtime_noequal, runtime_memprint, runtime_memcopy128 },
 };
 
 // Runtime helpers.
@@ -466,7 +466,7 @@ runtime·algarray[] =
 // func equal(t *Type, x T, y T) (ret bool)
 #pragma textflag 7
 void
-runtime·equal(Type *t, ...)
+runtime_equal(Type *t, ...)
 {
 	byte *x, *y;
 	uintptr ret;

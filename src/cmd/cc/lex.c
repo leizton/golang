@@ -369,7 +369,7 @@ lookup(void)
 	char *r, *w;
 
 	if((uchar)symb[0] == 0xc2 && (uchar)symb[1] == 0xb7) {
-		// turn leading · into ""·
+		// turn leading _ into ""_
 		h = strlen(symb);
 		ensuresymb(h+2);
 		memmove(symb+2, symb, h+1);
@@ -377,7 +377,7 @@ lookup(void)
 		symb[1] = '"';
 	}
 
-	// turn · into .
+	// turn _ into .
 	for(r=w=symb; *r; r++) {
 		if((uchar)*r == 0xc2 && (uchar)*(r+1) == 0xb7) {
 			*w++ = '.';

@@ -33,7 +33,7 @@
 static void
 _cgo_allocate_internal(uintptr len, byte *ret)
 {
-	ret = runtime·mal(len);
+	ret = runtime_mal(len);
 	FLUSH(&ret);
 }
 
@@ -41,7 +41,7 @@ _cgo_allocate_internal(uintptr len, byte *ret)
 void
 _cgo_allocate(void *a, int32 n)
 {
-	runtime·cgocallback((void(*)(void))_cgo_allocate_internal, a, n);
+	runtime_cgocallback((void(*)(void))_cgo_allocate_internal, a, n);
 }
 
 // Panic.  The argument is converted into a Go string.
@@ -52,7 +52,7 @@ _cgo_allocate(void *a, int32 n)
 //   crosscall2(_cgo_panic, &a, sizeof a);
 //   /* The function call will not return.  */
 
-extern void ·cgoStringToEface(String, Eface*);
+extern void _cgoStringToEface(String, Eface*);
 
 static void
 _cgo_panic_internal(byte *p)
@@ -60,14 +60,14 @@ _cgo_panic_internal(byte *p)
 	String s;
 	Eface err;
 
-	s = runtime·gostring(p);
-	·cgoStringToEface(s, &err);
-	runtime·panic(err);
+	s = runtime_gostring(p);
+	_cgoStringToEface(s, &err);
+	runtime_panic(err);
 }
 
 #pragma dynexport _cgo_panic _cgo_panic
 void
 _cgo_panic(void *a, int32 n)
 {
-	runtime·cgocallback((void(*)(void))_cgo_panic_internal, a, n);
+	runtime_cgocallback((void(*)(void))_cgo_panic_internal, a, n);
 }

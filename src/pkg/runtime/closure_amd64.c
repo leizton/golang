@@ -9,20 +9,20 @@
 //	fn func(arg0, arg1, arg2 *ptr, callerpc uintptr, xxx) yyy,
 //	arg0, arg1, arg2 *ptr) (func(xxx) yyy)
 void
-runtime·closure(int32 siz, byte *fn, byte *arg0)
+runtime_closure(int32 siz, byte *fn, byte *arg0)
 {
 	byte *p, *q, **ret;
 	int32 i, n;
 	int64 pcrel;
 
 	if(siz < 0 || siz%8 != 0)
-		runtime·throw("bad closure size");
+		runtime_throw("bad closure size");
 
 	ret = (byte**)((byte*)&arg0 + siz);
 
 	if(siz > 100) {
 		// TODO(rsc): implement stack growth preamble?
-		runtime·throw("closure too big");
+		runtime_throw("closure too big");
 	}
 
 	// compute size of new fn.
@@ -40,12 +40,12 @@ runtime·closure(int32 siz, byte *fn, byte *arg0)
 	if(n%8)
 		n += 8 - n%8;
 
-	p = runtime·mal(n);
+	p = runtime_mal(n);
 	*ret = p;
 	q = p + n - siz;
 
 	if(siz > 0) {
-		runtime·memmove(q, (byte*)&arg0, siz);
+		runtime_memmove(q, (byte*)&arg0, siz);
 
 		// SUBQ $siz, SP
 		*p++ = 0x48;
@@ -117,7 +117,7 @@ runtime·closure(int32 siz, byte *fn, byte *arg0)
 	*p++ = 0xc3;
 
 	if(p > q)
-		runtime·throw("bad math in sys.closure");
+		runtime_throw("bad math in sys.closure");
 }
 
 

@@ -9,7 +9,7 @@ static	uint64	uvinf		= 0x7FF0000000000000ULL;
 static	uint64	uvneginf	= 0xFFF0000000000000ULL;
 
 uint32
-runtime·float32tobits(float32 f)
+runtime_float32tobits(float32 f)
 {
 	// The obvious cast-and-pointer code is technically
 	// not valid, and gcc miscompiles it.  Use a union instead.
@@ -22,7 +22,7 @@ runtime·float32tobits(float32 f)
 }
 
 uint64
-runtime·float64tobits(float64 f)
+runtime_float64tobits(float64 f)
 {
 	// The obvious cast-and-pointer code is technically
 	// not valid, and gcc miscompiles it.  Use a union instead.
@@ -35,7 +35,7 @@ runtime·float64tobits(float64 f)
 }
 
 float64
-runtime·float64frombits(uint64 i)
+runtime_float64frombits(uint64 i)
 {
 	// The obvious cast-and-pointer code is technically
 	// not valid, and gcc miscompiles it.  Use a union instead.
@@ -48,7 +48,7 @@ runtime·float64frombits(uint64 i)
 }
 
 float32
-runtime·float32frombits(uint32 i)
+runtime_float32frombits(uint32 i)
 {
 	// The obvious cast-and-pointer code is technically
 	// not valid, and gcc miscompiles it.  Use a union instead.
@@ -61,11 +61,11 @@ runtime·float32frombits(uint32 i)
 }
 
 bool
-runtime·isInf(float64 f, int32 sign)
+runtime_isInf(float64 f, int32 sign)
 {
 	uint64 x;
 
-	x = runtime·float64tobits(f);
+	x = runtime_float64tobits(f);
 	if(sign == 0)
 		return x == uvinf || x == uvneginf;
 	if(sign > 0)
@@ -74,27 +74,27 @@ runtime·isInf(float64 f, int32 sign)
 }
 
 float64
-runtime·NaN(void)
+runtime_NaN(void)
 {
-	return runtime·float64frombits(uvnan);
+	return runtime_float64frombits(uvnan);
 }
 
 bool
-runtime·isNaN(float64 f)
+runtime_isNaN(float64 f)
 {
 	uint64 x;
 
-	x = runtime·float64tobits(f);
-	return ((uint32)(x>>52) & 0x7FF) == 0x7FF && !runtime·isInf(f, 0);
+	x = runtime_float64tobits(f);
+	return ((uint32)(x>>52) & 0x7FF) == 0x7FF && !runtime_isInf(f, 0);
 }
 
 float64
-runtime·Inf(int32 sign)
+runtime_Inf(int32 sign)
 {
 	if(sign >= 0)
-		return runtime·float64frombits(uvinf);
+		return runtime_float64frombits(uvinf);
 	else
-		return runtime·float64frombits(uvneginf);
+		return runtime_float64frombits(uvneginf);
 }
 
 enum
@@ -105,7 +105,7 @@ enum
 };
 
 float64
-runtime·frexp(float64 d, int32 *ep)
+runtime_frexp(float64 d, int32 *ep)
 {
 	uint64 x;
 
@@ -113,36 +113,36 @@ runtime·frexp(float64 d, int32 *ep)
 		*ep = 0;
 		return 0;
 	}
-	x = runtime·float64tobits(d);
+	x = runtime_float64tobits(d);
 	*ep = (int32)((x >> SHIFT) & MASK) - BIAS;
 	x &= ~((uint64)MASK << SHIFT);
 	x |= (uint64)BIAS << SHIFT;
-	return runtime·float64frombits(x);
+	return runtime_float64frombits(x);
 }
 
 float64
-runtime·ldexp(float64 d, int32 e)
+runtime_ldexp(float64 d, int32 e)
 {
 	uint64 x;
 
 	if(d == 0)
 		return 0;
-	x = runtime·float64tobits(d);
+	x = runtime_float64tobits(d);
 	e += (int32)(x >> SHIFT) & MASK;
 	if(e <= 0)
 		return 0;	/* underflow */
 	if(e >= MASK){		/* overflow */
 		if(d < 0)
-			return runtime·Inf(-1);
-		return runtime·Inf(1);
+			return runtime_Inf(-1);
+		return runtime_Inf(1);
 	}
 	x &= ~((uint64)MASK << SHIFT);
 	x |= (uint64)e << SHIFT;
-	return runtime·float64frombits(x);
+	return runtime_float64frombits(x);
 }
 
 float64
-runtime·modf(float64 d, float64 *ip)
+runtime_modf(float64 d, float64 *ip)
 {
 	float64 dd;
 	uint64 x;
@@ -150,7 +150,7 @@ runtime·modf(float64 d, float64 *ip)
 
 	if(d < 1) {
 		if(d < 0) {
-			d = runtime·modf(-d, ip);
+			d = runtime_modf(-d, ip);
 			*ip = -*ip;
 			return -d;
 		}
@@ -158,7 +158,7 @@ runtime·modf(float64 d, float64 *ip)
 		return d;
 	}
 
-	x = runtime·float64tobits(d);
+	x = runtime_float64tobits(d);
 	e = (int32)((x >> SHIFT) & MASK) - BIAS;
 
 	/*
@@ -166,7 +166,7 @@ runtime·modf(float64 d, float64 *ip)
 	 */
 	if(e <= 64-11)
 		x &= ~(((uint64)1 << (64LL-11LL-e))-1);
-	dd = runtime·float64frombits(x);
+	dd = runtime_float64frombits(x);
 	*ip = dd;
 	return d - dd;
 }

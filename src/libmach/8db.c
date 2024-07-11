@@ -55,11 +55,11 @@ static	int	i386das(Map*, uvlong, char*, int);
 static	int	i386instlen(Map*, uvlong);
 
 static	char	STARTSYM[] =	"_main";
-static	char	GOSTARTSYM[] =	"sys·goexit";
+static	char	GOSTARTSYM[] =	"sys_goexit";
 static	char	PROFSYM[] =	"_mainp";
 static	char	FRAMENAME[] =	".frame";
-static	char	LESSSTACK[] = "sys·lessstack";
-static	char	MORESTACK[] = "sys·morestack";
+static	char	LESSSTACK[] = "sys_lessstack";
+static	char	MORESTACK[] = "sys_morestack";
 static char *excname[] =
 {
 [0] =	"divide error",

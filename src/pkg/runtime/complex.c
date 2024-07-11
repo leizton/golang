@@ -7,34 +7,34 @@
 typedef struct Complex128 Complex128;
 
 void
-runtime·complex128div(Complex128 n, Complex128 d, Complex128 q)
+runtime_complex128div(Complex128 n, Complex128 d, Complex128 q)
 {
 	int32 ninf, dinf, nnan, dnan;
 	float64 a, b, ratio, denom;
 
 	// Special cases as in C99.
-	ninf = runtime·isInf(n.real, 0) || runtime·isInf(n.imag, 0);
-	dinf = runtime·isInf(d.real, 0) || runtime·isInf(d.imag, 0);
+	ninf = runtime_isInf(n.real, 0) || runtime_isInf(n.imag, 0);
+	dinf = runtime_isInf(d.real, 0) || runtime_isInf(d.imag, 0);
 
-	nnan = !ninf && (runtime·isNaN(n.real) || runtime·isNaN(n.imag));
-	dnan = !dinf && (runtime·isNaN(d.real) || runtime·isNaN(d.imag));
+	nnan = !ninf && (runtime_isNaN(n.real) || runtime_isNaN(n.imag));
+	dnan = !dinf && (runtime_isNaN(d.real) || runtime_isNaN(d.imag));
 
 	if(nnan || dnan) {
-		q.real = runtime·NaN();
-		q.imag = runtime·NaN();
+		q.real = runtime_NaN();
+		q.imag = runtime_NaN();
 	} else if(ninf && !dinf && !dnan) {
-		q.real = runtime·Inf(0);
-		q.imag = runtime·Inf(0);
+		q.real = runtime_Inf(0);
+		q.imag = runtime_Inf(0);
 	} else if(!ninf && !nnan && dinf) {
 		q.real = 0;
 		q.imag = 0;
 	} else if(d.real == 0 && d.imag == 0) {
 		if(n.real == 0 && n.imag == 0) {
-			q.real = runtime·NaN();
-			q.imag = runtime·NaN();
+			q.real = runtime_NaN();
+			q.imag = runtime_NaN();
 		} else {
-			q.real = runtime·Inf(0);
-			q.imag = runtime·Inf(0);
+			q.real = runtime_Inf(0);
+			q.imag = runtime_Inf(0);
 		}
 	} else {
 		// Standard complex arithmetic, factored to avoid unnecessary overflow.

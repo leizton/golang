@@ -121,14 +121,14 @@ static void LostProfileData(void) {
 // SetCPUProfileRate sets the CPU profiling rate.
 // The user documentation is in debug.go.
 void
-runtime·SetCPUProfileRate(int32 hz)
+runtime_SetCPUProfileRate(int32 hz)
 {
 	uintptr *p;
 	uintptr n;
 	
 	// Call findfunc now so that it won't have to
 	// build tables during the signal handler.
-	runtime·findfunc(0);
+	runtime_findfunc(0);
 
 	// Clamp hz to something reasonable.
 	if(hz < 0)
@@ -136,19 +136,19 @@ runtime·SetCPUProfileRate(int32 hz)
 	if(hz > 1000000)
 		hz = 1000000;
 
-	runtime·lock(&lk);
+	runtime_lock(&lk);
 	if(hz > 0) {
 		if(prof == nil) {
-			prof = runtime·SysAlloc(sizeof *prof);
+			prof = runtime_SysAlloc(sizeof *prof);
 			if(prof == nil) {
-				runtime·printf("runtime: cpu profiling cannot allocate memory\n");
-				runtime·unlock(&lk);
+				runtime_printf("runtime: cpu profiling cannot allocate memory\n");
+				runtime_unlock(&lk);
 				return;
 			}
 		}
 		if(prof->on || prof->handoff != 0) {
-			runtime·printf("runtime: cannot set cpu profile rate until previous profile has finished.\n");
-			runtime·unlock(&lk);
+			runtime_printf("runtime: cannot set cpu profile rate until previous profile has finished.\n");
+			runtime_unlock(&lk);
 			return;
 		}
 
@@ -167,11 +167,11 @@ runtime·SetCPUProfileRate(int32 hz)
 		prof->wtoggle = 0;
 		prof->flushing = false;
 		prof->eod_sent = false;
-		runtime·noteclear(&prof->wait);
+		runtime_noteclear(&prof->wait);
 
-		runtime·setcpuprofilerate(tick, hz);
+		runtime_setcpuprofilerate(tick, hz);
 	} else if(prof->on) {
-		runtime·setcpuprofilerate(nil, 0);
+		runtime_setcpuprofilerate(nil, 0);
 		prof->on = false;
 
 		// Now add is not running anymore, and getprofile owns the entire log.
@@ -179,16 +179,16 @@ runtime·SetCPUProfileRate(int32 hz)
 		for(;;) {
 			n = prof->handoff;
 			if(n&0x80000000)
-				runtime·printf("runtime: setcpuprofile(off) twice");
-			if(runtime·cas(&prof->handoff, n, n|0x80000000))
+				runtime_printf("runtime: setcpuprofile(off) twice");
+			if(runtime_cas(&prof->handoff, n, n|0x80000000))
 				break;
 		}
 		if(n == 0) {
 			// we did the transition from 0 -> nonzero so we wake getprofile
-			runtime·notewakeup(&prof->wait);
+			runtime_notewakeup(&prof->wait);
 		}
 	}
-	runtime·unlock(&lk);
+	runtime_unlock(&lk);
 }
 
 static void
@@ -298,9 +298,9 @@ flushlog(Profile *p)
 {
 	uintptr *log, *q;
 
-	if(!runtime·cas(&p->handoff, 0, p->nlog))
+	if(!runtime_cas(&p->handoff, 0, p->nlog))
 		return false;
-	runtime·notewakeup(&p->wait);
+	runtime_notewakeup(&p->wait);
 
 	p->toggle = 1 - p->toggle;
 	log = p->log[p->toggle];
@@ -337,7 +337,7 @@ getprofile(Profile *p)
 		for(;;) {
 			n = p->handoff;
 			if(n == 0) {
-				runtime·printf("runtime: phase error during cpu profile handoff\n");
+				runtime_printf("runtime: phase error during cpu profile handoff\n");
 				return ret;
 			}
 			if(n & 0x80000000) {
@@ -346,7 +346,7 @@ getprofile(Profile *p)
 				p->flushing = true;
 				goto flush;
 			}
-			if(runtime·cas(&p->handoff, n, 0))
+			if(runtime_cas(&p->handoff, n, 0))
 				break;
 		}
 		p->wtoggle = 1 - p->wtoggle;
@@ -360,14 +360,14 @@ getprofile(Profile *p)
 		return ret;
 
 	// Wait for new log.
-	runtime·entersyscall();
-	runtime·notesleep(&p->wait);
-	runtime·exitsyscall();
-	runtime·noteclear(&p->wait);
+	runtime_entersyscall();
+	runtime_notesleep(&p->wait);
+	runtime_exitsyscall();
+	runtime_noteclear(&p->wait);
 
 	n = p->handoff;
 	if(n == 0) {
-		runtime·printf("runtime: phase error during cpu profile wait\n");
+		runtime_printf("runtime: phase error during cpu profile wait\n");
 		return ret;
 	}
 	if(n == 0x80000000) {
@@ -425,15 +425,15 @@ breakflush:
 
 	// Finally done.  Clean up and return nil.
 	p->flushing = false;
-	if(!runtime·cas(&p->handoff, p->handoff, 0))
-		runtime·printf("runtime: profile flush racing with something\n");
+	if(!runtime_cas(&p->handoff, p->handoff, 0))
+		runtime_printf("runtime: profile flush racing with something\n");
 	return ret;  // set to nil at top of function
 }
 
 // CPUProfile returns the next cpu profile block as a []byte.
 // The user documentation is in debug.go.
 void
-runtime·CPUProfile(Slice ret)
+runtime_CPUProfile(Slice ret)
 {
 	ret = getprofile(prof);
 	FLUSH(&ret);

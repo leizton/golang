@@ -155,11 +155,11 @@ struct MLink
 //
 // SysMap maps previously reserved address space for use.
 
-void*	runtime·SysAlloc(uintptr nbytes);
-void	runtime·SysFree(void *v, uintptr nbytes);
-void	runtime·SysUnused(void *v, uintptr nbytes);
-void	runtime·SysMap(void *v, uintptr nbytes);
-void*	runtime·SysReserve(void *v, uintptr nbytes);
+void*	runtime_SysAlloc(uintptr nbytes);
+void	runtime_SysFree(void *v, uintptr nbytes);
+void	runtime_SysUnused(void *v, uintptr nbytes);
+void	runtime_SysMap(void *v, uintptr nbytes);
+void*	runtime_SysReserve(void *v, uintptr nbytes);
 
 // FixAlloc is a simple free-list allocator for fixed size objects.
 // Malloc uses a FixAlloc wrapped around SysAlloc to manages its
@@ -182,9 +182,9 @@ struct FixAlloc
 	uintptr sys;	// bytes obtained from system
 };
 
-void	runtime·FixAlloc_Init(FixAlloc *f, uintptr size, void *(*alloc)(uintptr), void (*first)(void*, byte*), void *arg);
-void*	runtime·FixAlloc_Alloc(FixAlloc *f);
-void	runtime·FixAlloc_Free(FixAlloc *f, void *p);
+void	runtime_FixAlloc_Init(FixAlloc *f, uintptr size, void *(*alloc)(uintptr), void (*first)(void*, byte*), void *arg);
+void*	runtime_FixAlloc_Alloc(FixAlloc *f);
+void	runtime_FixAlloc_Free(FixAlloc *f, void *p);
 
 
 // Statistics.
@@ -236,7 +236,7 @@ struct MStats
 	} by_size[NumSizeClasses];
 };
 
-#define mstats runtime·memStats	/* name shared with Go */
+#define mstats runtime_memStats	/* name shared with Go */
 extern MStats mstats;
 
 
@@ -253,11 +253,11 @@ extern MStats mstats;
 //	taking a bunch of objects out of the central lists
 //	and putting them in the thread free list.
 
-int32	runtime·SizeToClass(int32);
-extern	int32	runtime·class_to_size[NumSizeClasses];
-extern	int32	runtime·class_to_allocnpages[NumSizeClasses];
-extern	int32	runtime·class_to_transfercount[NumSizeClasses];
-extern	void	runtime·InitSizes(void);
+int32	runtime_SizeToClass(int32);
+extern	int32	runtime_class_to_size[NumSizeClasses];
+extern	int32	runtime_class_to_allocnpages[NumSizeClasses];
+extern	int32	runtime_class_to_transfercount[NumSizeClasses];
+extern	void	runtime_InitSizes(void);
 
 
 // Per-thread (in Go, per-M) cache for small objects.
@@ -290,9 +290,9 @@ struct MCache
 
 };
 
-void*	runtime·MCache_Alloc(MCache *c, int32 sizeclass, uintptr size, int32 zeroed);
-void	runtime·MCache_Free(MCache *c, void *p, int32 sizeclass, uintptr size);
-void	runtime·MCache_ReleaseAll(MCache *c);
+void*	runtime_MCache_Alloc(MCache *c, int32 sizeclass, uintptr size, int32 zeroed);
+void	runtime_MCache_Free(MCache *c, void *p, int32 sizeclass, uintptr size);
+void	runtime_MCache_ReleaseAll(MCache *c);
 
 // An MSpan is a run of pages.
 enum
@@ -318,15 +318,15 @@ struct MSpan
 	byte	*limit;		// end of data in span
 };
 
-void	runtime·MSpan_Init(MSpan *span, PageID start, uintptr npages);
+void	runtime_MSpan_Init(MSpan *span, PageID start, uintptr npages);
 
 // Every MSpan is in one doubly-linked list,
 // either one of the MHeap's free lists or one of the
 // MCentral's span lists.  We use empty MSpan structures as list heads.
-void	runtime·MSpanList_Init(MSpan *list);
-bool	runtime·MSpanList_IsEmpty(MSpan *list);
-void	runtime·MSpanList_Insert(MSpan *list, MSpan *span);
-void	runtime·MSpanList_Remove(MSpan *span);	// from whatever list it is in
+void	runtime_MSpanList_Init(MSpan *list);
+bool	runtime_MSpanList_IsEmpty(MSpan *list);
+void	runtime_MSpanList_Insert(MSpan *list, MSpan *span);
+void	runtime_MSpanList_Remove(MSpan *span);	// from whatever list it is in
 
 
 // Central list of free objects of a given size.
@@ -339,9 +339,9 @@ struct MCentral
 	int32 nfree;
 };
 
-void	runtime·MCentral_Init(MCentral *c, int32 sizeclass);
-int32	runtime·MCentral_AllocList(MCentral *c, int32 n, MLink **first);
-void	runtime·MCentral_FreeList(MCentral *c, int32 n, MLink *first);
+void	runtime_MCentral_Init(MCentral *c, int32 sizeclass);
+int32	runtime_MCentral_AllocList(MCentral *c, int32 n, MLink **first);
+void	runtime_MCentral_FreeList(MCentral *c, int32 n, MLink *first);
 
 // Main malloc heap.
 // The heap itself is the "free[]" and "large" arrays,
@@ -375,31 +375,31 @@ struct MHeap
 	FixAlloc spanalloc;	// allocator for Span*
 	FixAlloc cachealloc;	// allocator for MCache*
 };
-extern MHeap runtime·mheap;
+extern MHeap runtime_mheap;
 
-void	runtime·MHeap_Init(MHeap *h, void *(*allocator)(uintptr));
-MSpan*	runtime·MHeap_Alloc(MHeap *h, uintptr npage, int32 sizeclass, int32 acct);
-void	runtime·MHeap_Free(MHeap *h, MSpan *s, int32 acct);
-MSpan*	runtime·MHeap_Lookup(MHeap *h, void *v);
-MSpan*	runtime·MHeap_LookupMaybe(MHeap *h, void *v);
-void	runtime·MGetSizeClassInfo(int32 sizeclass, uintptr *size, int32 *npages, int32 *nobj);
-void*	runtime·MHeap_SysAlloc(MHeap *h, uintptr n);
-void	runtime·MHeap_MapBits(MHeap *h);
-void	runtime·MHeap_Scavenger(void);
+void	runtime_MHeap_Init(MHeap *h, void *(*allocator)(uintptr));
+MSpan*	runtime_MHeap_Alloc(MHeap *h, uintptr npage, int32 sizeclass, int32 acct);
+void	runtime_MHeap_Free(MHeap *h, MSpan *s, int32 acct);
+MSpan*	runtime_MHeap_Lookup(MHeap *h, void *v);
+MSpan*	runtime_MHeap_LookupMaybe(MHeap *h, void *v);
+void	runtime_MGetSizeClassInfo(int32 sizeclass, uintptr *size, int32 *npages, int32 *nobj);
+void*	runtime_MHeap_SysAlloc(MHeap *h, uintptr n);
+void	runtime_MHeap_MapBits(MHeap *h);
+void	runtime_MHeap_Scavenger(void);
 
-void*	runtime·mallocgc(uintptr size, uint32 flag, int32 dogc, int32 zeroed);
-int32	runtime·mlookup(void *v, byte **base, uintptr *size, MSpan **s);
-void	runtime·gc(int32 force);
-void	runtime·markallocated(void *v, uintptr n, bool noptr);
-void	runtime·checkallocated(void *v, uintptr n);
-void	runtime·markfreed(void *v, uintptr n);
-void	runtime·checkfreed(void *v, uintptr n);
-int32	runtime·checking;
-void	runtime·markspan(void *v, uintptr size, uintptr n, bool leftover);
-void	runtime·unmarkspan(void *v, uintptr size);
-bool	runtime·blockspecial(void*);
-void	runtime·setblockspecial(void*, bool);
-void	runtime·purgecachedstats(M*);
+void*	runtime_mallocgc(uintptr size, uint32 flag, int32 dogc, int32 zeroed);
+int32	runtime_mlookup(void *v, byte **base, uintptr *size, MSpan **s);
+void	runtime_gc(int32 force);
+void	runtime_markallocated(void *v, uintptr n, bool noptr);
+void	runtime_checkallocated(void *v, uintptr n);
+void	runtime_markfreed(void *v, uintptr n);
+void	runtime_checkfreed(void *v, uintptr n);
+int32	runtime_checking;
+void	runtime_markspan(void *v, uintptr size, uintptr n, bool leftover);
+void	runtime_unmarkspan(void *v, uintptr size);
+bool	runtime_blockspecial(void*);
+void	runtime_setblockspecial(void*, bool);
+void	runtime_purgecachedstats(M*);
 
 enum
 {
@@ -409,11 +409,11 @@ enum
 	FlagNoGC = 1<<2,	// must not free or scan for pointers
 };
 
-void	runtime·MProf_Malloc(void*, uintptr);
-void	runtime·MProf_Free(void*, uintptr);
-void	runtime·MProf_GC(void);
-int32	runtime·helpgc(bool*);
-void	runtime·gchelper(void);
+void	runtime_MProf_Malloc(void*, uintptr);
+void	runtime_MProf_Free(void*, uintptr);
+void	runtime_MProf_GC(void);
+int32	runtime_helpgc(bool*);
+void	runtime_gchelper(void);
 
-bool	runtime·getfinalizer(void *p, bool del, void (**fn)(void*), int32 *nret);
-void	runtime·walkfintab(void (*fn)(void*));
+bool	runtime_getfinalizer(void *p, bool del, void (**fn)(void*), int32 *nret);
+void	runtime_walkfintab(void (*fn)(void*));

@@ -7,7 +7,7 @@
 #include "os_GOOS.h"
 #include "stack.h"
 
-extern SigTab runtime·sigtab[];
+extern SigTab runtime_sigtab[];
 
 static Sigset sigset_all = ~(Sigset)0;
 static Sigset sigset_none;
@@ -16,45 +16,45 @@ static Sigset sigset_prof = 1<<(SIGPROF-1);
 static void
 unimplemented(int8 *name)
 {
-	runtime·prints(name);
-	runtime·prints(" not implemented\n");
+	runtime_prints(name);
+	runtime_prints(" not implemented\n");
 	*(int32*)1231 = 1231;
 }
 
 int32
-runtime·semasleep(int64 ns)
+runtime_semasleep(int64 ns)
 {
 	int32 v;
 
 	if(m->profilehz > 0)
-		runtime·setprof(false);
-	v = runtime·mach_semacquire(m->waitsema, ns);
+		runtime_setprof(false);
+	v = runtime_mach_semacquire(m->waitsema, ns);
 	if(m->profilehz > 0)
-		runtime·setprof(true);
+		runtime_setprof(true);
 	return v;
 }
 
 void
-runtime·semawakeup(M *mp)
+runtime_semawakeup(M *mp)
 {
-	runtime·mach_semrelease(mp->waitsema);
+	runtime_mach_semrelease(mp->waitsema);
 }
 
 uintptr
-runtime·semacreate(void)
+runtime_semacreate(void)
 {
-	return runtime·mach_semcreate();
+	return runtime_mach_semcreate();
 }
 
 // BSD interface for threading.
 void
-runtime·osinit(void)
+runtime_osinit(void)
 {
 	// Register our thread-creation callback (see sys_darwin_{amd64,386}.s)
 	// but only if we're not using cgo.  If we are using cgo we need
 	// to let the C pthread libary install its own thread-creation callback.
-	if(!runtime·iscgo)
-		runtime·bsdthread_register();
+	if(!runtime_iscgo)
+		runtime_bsdthread_register();
 
 	// Use sysctl to fetch hw.ncpu.
 	uint32 mib[2];
@@ -66,51 +66,51 @@ runtime·osinit(void)
 	mib[1] = 3;
 	nout = sizeof out;
 	out = 0;
-	ret = runtime·sysctl(mib, 2, (byte*)&out, &nout, nil, 0);
+	ret = runtime_sysctl(mib, 2, (byte*)&out, &nout, nil, 0);
 	if(ret >= 0)
-		runtime·ncpu = out;
+		runtime_ncpu = out;
 }
 
 void
-runtime·goenvs(void)
+runtime_goenvs(void)
 {
-	runtime·goenvs_unix();
+	runtime_goenvs_unix();
 }
 
 void
-runtime·newosproc(M *m, G *g, void *stk, void (*fn)(void))
+runtime_newosproc(M *m, G *g, void *stk, void (*fn)(void))
 {
 	int32 errno;
 	Sigset oset;
 
 	m->tls[0] = m->id;	// so 386 asm can find it
 	if(0){
-		runtime·printf("newosproc stk=%p m=%p g=%p fn=%p id=%d/%d ostk=%p\n",
+		runtime_printf("newosproc stk=%p m=%p g=%p fn=%p id=%d/%d ostk=%p\n",
 			stk, m, g, fn, m->id, m->tls[0], &m);
 	}
 
-	runtime·sigprocmask(SIG_SETMASK, &sigset_all, &oset);
-	errno = runtime·bsdthread_create(stk, m, g, fn);
-	runtime·sigprocmask(SIG_SETMASK, &oset, nil);
+	runtime_sigprocmask(SIG_SETMASK, &sigset_all, &oset);
+	errno = runtime_bsdthread_create(stk, m, g, fn);
+	runtime_sigprocmask(SIG_SETMASK, &oset, nil);
 
 	if(errno < 0) {
-		runtime·printf("runtime: failed to create new OS thread (have %d already; errno=%d)\n", runtime·mcount(), -errno);
-		runtime·throw("runtime.newosproc");
+		runtime_printf("runtime: failed to create new OS thread (have %d already; errno=%d)\n", runtime_mcount(), -errno);
+		runtime_throw("runtime.newosproc");
 	}
 }
 
 // Called to initialize a new m (including the bootstrap m).
 void
-runtime·minit(void)
+runtime_minit(void)
 {
 	// Initialize signal handling.
-	m->gsignal = runtime·malg(32*1024);	// OS X wants >=8K, Linux >=2K
-	runtime·signalstack(m->gsignal->stackguard - StackGuard, 32*1024);
+	m->gsignal = runtime_malg(32*1024);	// OS X wants >=8K, Linux >=2K
+	runtime_signalstack(m->gsignal->stackguard - StackGuard, 32*1024);
 
 	if(m->profilehz > 0)
-		runtime·sigprocmask(SIG_SETMASK, &sigset_none, nil);
+		runtime_sigprocmask(SIG_SETMASK, &sigset_none, nil);
 	else
-		runtime·sigprocmask(SIG_SETMASK, &sigset_prof, nil);
+		runtime_sigprocmask(SIG_SETMASK, &sigset_prof, nil);
 }
 
 // Mach IPC, to get at semaphores
@@ -119,8 +119,8 @@ runtime·minit(void)
 static void
 macherror(int32 r, int8 *fn)
 {
-	runtime·printf("mach error %s: %d\n", fn, r);
-	runtime·throw("mach error");
+	runtime_printf("mach error %s: %d\n", fn, r);
+	runtime_throw("mach error");
 }
 
 enum
@@ -142,7 +142,7 @@ mach_msg(MachHeader *h,
 	uint32 notify)
 {
 	// TODO: Loop on interrupt.
-	return runtime·mach_msg_trap(h, op, send_size, rcv_size, rcv_name, timeout, notify);
+	return runtime_mach_msg_trap(h, op, send_size, rcv_size, rcv_name, timeout, notify);
 }
 
 // Mach RPC (MIG)
@@ -172,7 +172,7 @@ machcall(MachHeader *h, int32 maxsize, int32 rxsize)
 	CodeMsg *c;
 
 	if((port = m->machport) == 0){
-		port = runtime·mach_reply_port();
+		port = runtime_mach_reply_port();
 		m->machport = port;
 	}
 
@@ -183,48 +183,48 @@ machcall(MachHeader *h, int32 maxsize, int32 rxsize)
 
 	if(DebugMach){
 		p = (uint32*)h;
-		runtime·prints("send:\t");
+		runtime_prints("send:\t");
 		for(i=0; i<h->msgh_size/sizeof(p[0]); i++){
-			runtime·prints(" ");
-			runtime·printpointer((void*)p[i]);
+			runtime_prints(" ");
+			runtime_printpointer((void*)p[i]);
 			if(i%8 == 7)
-				runtime·prints("\n\t");
+				runtime_prints("\n\t");
 		}
 		if(i%8)
-			runtime·prints("\n");
+			runtime_prints("\n");
 	}
 
 	ret = mach_msg(h, MACH_SEND_MSG|MACH_RCV_MSG,
 		h->msgh_size, maxsize, port, 0, 0);
 	if(ret != 0){
 		if(DebugMach){
-			runtime·prints("mach_msg error ");
-			runtime·printint(ret);
-			runtime·prints("\n");
+			runtime_prints("mach_msg error ");
+			runtime_printint(ret);
+			runtime_prints("\n");
 		}
 		return ret;
 	}
 
 	if(DebugMach){
 		p = (uint32*)h;
-		runtime·prints("recv:\t");
+		runtime_prints("recv:\t");
 		for(i=0; i<h->msgh_size/sizeof(p[0]); i++){
-			runtime·prints(" ");
-			runtime·printpointer((void*)p[i]);
+			runtime_prints(" ");
+			runtime_printpointer((void*)p[i]);
 			if(i%8 == 7)
-				runtime·prints("\n\t");
+				runtime_prints("\n\t");
 		}
 		if(i%8)
-			runtime·prints("\n");
+			runtime_prints("\n");
 	}
 
 	if(h->msgh_id != id+Reply){
 		if(DebugMach){
-			runtime·prints("mach_msg reply id mismatch ");
-			runtime·printint(h->msgh_id);
-			runtime·prints(" != ");
-			runtime·printint(id+Reply);
-			runtime·prints("\n");
+			runtime_prints("mach_msg reply id mismatch ");
+			runtime_printint(h->msgh_id);
+			runtime_prints(" != ");
+			runtime_printint(id+Reply);
+			runtime_prints("\n");
 		}
 		return -303;	// MIG_REPLY_MISMATCH
 	}
@@ -239,20 +239,20 @@ machcall(MachHeader *h, int32 maxsize, int32 rxsize)
 	if(h->msgh_size == sizeof(CodeMsg)
 	&& !(h->msgh_bits & MACH_MSGH_BITS_COMPLEX)){
 		if(DebugMach){
-			runtime·prints("mig result ");
-			runtime·printint(c->code);
-			runtime·prints("\n");
+			runtime_prints("mig result ");
+			runtime_printint(c->code);
+			runtime_prints("\n");
 		}
 		return c->code;
 	}
 
 	if(h->msgh_size != rxsize){
 		if(DebugMach){
-			runtime·prints("mach_msg reply size mismatch ");
-			runtime·printint(h->msgh_size);
-			runtime·prints(" != ");
-			runtime·printint(rxsize);
-			runtime·prints("\n");
+			runtime_prints("mach_msg reply size mismatch ");
+			runtime_printint(h->msgh_size);
+			runtime_prints(" != ");
+			runtime_printint(rxsize);
+			runtime_prints("\n");
 		}
 		return -307;	// MIG_ARRAY_TOO_LARGE
 	}
@@ -307,7 +307,7 @@ struct Tmach_semdestroyMsg
 #pragma pack off
 
 uint32
-runtime·mach_semcreate(void)
+runtime_mach_semcreate(void)
 {
 	union {
 		Tmach_semcreateMsg tx;
@@ -318,7 +318,7 @@ runtime·mach_semcreate(void)
 
 	m.tx.h.msgh_bits = 0;
 	m.tx.h.msgh_size = sizeof(m.tx);
-	m.tx.h.msgh_remote_port = runtime·mach_task_self();
+	m.tx.h.msgh_remote_port = runtime_mach_task_self();
 	m.tx.h.msgh_id = Tmach_semcreate;
 	m.tx.ndr = zerondr;
 
@@ -336,7 +336,7 @@ runtime·mach_semcreate(void)
 }
 
 void
-runtime·mach_semdestroy(uint32 sem)
+runtime_mach_semdestroy(uint32 sem)
 {
 	union {
 		Tmach_semdestroyMsg tx;
@@ -346,7 +346,7 @@ runtime·mach_semdestroy(uint32 sem)
 
 	m.tx.h.msgh_bits = MACH_MSGH_BITS_COMPLEX;
 	m.tx.h.msgh_size = sizeof(m.tx);
-	m.tx.h.msgh_remote_port = runtime·mach_task_self();
+	m.tx.h.msgh_remote_port = runtime_mach_task_self();
 	m.tx.h.msgh_id = Tmach_semdestroy;
 	m.tx.body.msgh_descriptor_count = 1;
 	m.tx.semaphore.name = sem;
@@ -361,25 +361,25 @@ runtime·mach_semdestroy(uint32 sem)
 }
 
 // The other calls have simple system call traps in sys_darwin_{amd64,386}.s
-int32 runtime·mach_semaphore_wait(uint32 sema);
-int32 runtime·mach_semaphore_timedwait(uint32 sema, uint32 sec, uint32 nsec);
-int32 runtime·mach_semaphore_signal(uint32 sema);
-int32 runtime·mach_semaphore_signal_all(uint32 sema);
+int32 runtime_mach_semaphore_wait(uint32 sema);
+int32 runtime_mach_semaphore_timedwait(uint32 sema, uint32 sec, uint32 nsec);
+int32 runtime_mach_semaphore_signal(uint32 sema);
+int32 runtime_mach_semaphore_signal_all(uint32 sema);
 
 int32
-runtime·mach_semacquire(uint32 sem, int64 ns)
+runtime_mach_semacquire(uint32 sem, int64 ns)
 {
 	int32 r;
 
 	if(ns >= 0) {
-		r = runtime·mach_semaphore_timedwait(sem, ns/1000000000LL, ns%1000000000LL);
+		r = runtime_mach_semaphore_timedwait(sem, ns/1000000000LL, ns%1000000000LL);
 		if(r == KERN_ABORTED || r == KERN_OPERATION_TIMED_OUT)
 			return -1;
 		if(r != 0)
 			macherror(r, "semaphore_wait");
 		return 0;
 	}
-	while((r = runtime·mach_semaphore_wait(sem)) != 0) {
+	while((r = runtime_mach_semaphore_wait(sem)) != 0) {
 		if(r == KERN_ABORTED)	// interrupted
 			continue;
 		macherror(r, "semaphore_wait");
@@ -388,11 +388,11 @@ runtime·mach_semacquire(uint32 sem, int64 ns)
 }
 
 void
-runtime·mach_semrelease(uint32 sem)
+runtime_mach_semrelease(uint32 sem)
 {
 	int32 r;
 
-	while((r = runtime·mach_semaphore_signal(sem)) != 0) {
+	while((r = runtime_mach_semaphore_signal(sem)) != 0) {
 		if(r == KERN_ABORTED)	// interrupted
 			continue;
 		macherror(r, "semaphore_signal");
@@ -400,45 +400,45 @@ runtime·mach_semrelease(uint32 sem)
 }
 
 void
-runtime·sigpanic(void)
+runtime_sigpanic(void)
 {
 	switch(g->sig) {
 	case SIGBUS:
 		if(g->sigcode0 == BUS_ADRERR && g->sigcode1 < 0x1000) {
 			if(g->sigpc == 0)
-				runtime·panicstring("call of nil func value");
-			runtime·panicstring("invalid memory address or nil pointer dereference");
+				runtime_panicstring("call of nil func value");
+			runtime_panicstring("invalid memory address or nil pointer dereference");
 		}
-		runtime·printf("unexpected fault address %p\n", g->sigcode1);
-		runtime·throw("fault");
+		runtime_printf("unexpected fault address %p\n", g->sigcode1);
+		runtime_throw("fault");
 	case SIGSEGV:
 		if((g->sigcode0 == 0 || g->sigcode0 == SEGV_MAPERR || g->sigcode0 == SEGV_ACCERR) && g->sigcode1 < 0x1000) {
 			if(g->sigpc == 0)
-				runtime·panicstring("call of nil func value");
-			runtime·panicstring("invalid memory address or nil pointer dereference");
+				runtime_panicstring("call of nil func value");
+			runtime_panicstring("invalid memory address or nil pointer dereference");
 		}
-		runtime·printf("unexpected fault address %p\n", g->sigcode1);
-		runtime·throw("fault");
+		runtime_printf("unexpected fault address %p\n", g->sigcode1);
+		runtime_throw("fault");
 	case SIGFPE:
 		switch(g->sigcode0) {
 		case FPE_INTDIV:
-			runtime·panicstring("integer divide by zero");
+			runtime_panicstring("integer divide by zero");
 		case FPE_INTOVF:
-			runtime·panicstring("integer overflow");
+			runtime_panicstring("integer overflow");
 		}
-		runtime·panicstring("floating point error");
+		runtime_panicstring("floating point error");
 	}
-	runtime·panicstring(runtime·sigtab[g->sig].name);
+	runtime_panicstring(runtime_sigtab[g->sig].name);
 }
 
 // TODO(rsc): place holder to fix build.
 void
-runtime·osyield(void)
+runtime_osyield(void)
 {
 }
 
 uintptr
-runtime·memlimit(void)
+runtime_memlimit(void)
 {
 	// NOTE(rsc): Could use getrlimit here,
 	// like on FreeBSD or Linux, but Darwin doesn't enforce
@@ -470,12 +470,12 @@ runtime·memlimit(void)
 
 // Control whether profiling signal can be delivered to this thread.
 void
-runtime·setprof(bool on)
+runtime_setprof(bool on)
 {
 	if(on)
-		runtime·sigprocmask(SIG_UNBLOCK, &sigset_prof, nil);
+		runtime_sigprocmask(SIG_UNBLOCK, &sigset_prof, nil);
 	else
-		runtime·sigprocmask(SIG_BLOCK, &sigset_prof, nil);
+		runtime_sigprocmask(SIG_BLOCK, &sigset_prof, nil);
 }
 
 static int8 badcallback[] = "runtime: cgo callback on thread not created by Go.\n";
@@ -483,9 +483,9 @@ static int8 badcallback[] = "runtime: cgo callback on thread not created by Go.\
 // This runs on a foreign stack, without an m or a g.  No stack split.
 #pragma textflag 7
 void
-runtime·badcallback(void)
+runtime_badcallback(void)
 {
-	runtime·write(2, badcallback, sizeof badcallback - 1);
+	runtime_write(2, badcallback, sizeof badcallback - 1);
 }
 
 static int8 badsignal[] = "runtime: signal received on thread not created by Go.\n";
@@ -493,7 +493,7 @@ static int8 badsignal[] = "runtime: signal received on thread not created by Go.
 // This runs on a foreign stack, without an m or a g.  No stack split.
 #pragma textflag 7
 void
-runtime·badsignal(void)
+runtime_badsignal(void)
 {
-	runtime·write(2, badsignal, sizeof badsignal - 1);
+	runtime_write(2, badsignal, sizeof badsignal - 1);
 }

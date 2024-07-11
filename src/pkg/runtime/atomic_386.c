@@ -6,14 +6,14 @@
 
 #pragma textflag 7
 uint32
-runtime·atomicload(uint32 volatile* addr)
+runtime_atomicload(uint32 volatile* addr)
 {
 	return *addr;
 }
 
 #pragma textflag 7
 void*
-runtime·atomicloadp(void* volatile* addr)
+runtime_atomicloadp(void* volatile* addr)
 {
 	return *addr;
 }

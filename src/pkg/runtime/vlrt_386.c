@@ -59,7 +59,7 @@ struct	Vlong
 	};
 };
 
-void	runtime·abort(void);
+void	runtime_abort(void);
 
 void
 _d2v(Vlong *y, double d)
@@ -270,7 +270,7 @@ _divvu(Vlong *q, Vlong n, Vlong d)
 }
 
 void
-runtime·uint64div(Vlong n, Vlong d, Vlong q)
+runtime_uint64div(Vlong n, Vlong d, Vlong q)
 {
 	_divvu(&q, n, d);
 }
@@ -288,7 +288,7 @@ _modvu(Vlong *r, Vlong n, Vlong d)
 }
 
 void
-runtime·uint64mod(Vlong n, Vlong d, Vlong q)
+runtime_uint64mod(Vlong n, Vlong d, Vlong q)
 {
 	_modvu(&q, n, d);
 }
@@ -334,7 +334,7 @@ _divv(Vlong *q, Vlong n, Vlong d)
 }
 
 void
-runtime·int64div(Vlong n, Vlong d, Vlong q)
+runtime_int64div(Vlong n, Vlong d, Vlong q)
 {
 	_divv(&q, n, d);
 }
@@ -368,7 +368,7 @@ _modv(Vlong *r, Vlong n, Vlong d)
 }
 
 void
-runtime·int64mod(Vlong n, Vlong d, Vlong q)
+runtime_int64mod(Vlong n, Vlong d, Vlong q)
 {
 	_modv(&q, n, d);
 }
@@ -522,7 +522,7 @@ _vasop(Vlong *ret, void *lv, void fn(Vlong*, Vlong, Vlong), int type, Vlong rv)
 	u.hi = 0;
 	switch(type) {
 	default:
-		runtime·abort();
+		runtime_abort();
 		break;
 
 	case 1:	/* schar */

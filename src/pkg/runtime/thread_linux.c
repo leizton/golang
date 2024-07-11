@@ -7,11 +7,11 @@
 #include "os_GOOS.h"
 #include "stack.h"
 
-extern SigTab runtime·sigtab[];
+extern SigTab runtime_sigtab[];
 
-int32 runtime·open(uint8*, int32, int32);
-int32 runtime·close(int32);
-int32 runtime·read(int32, void*, int32);
+int32 runtime_open(uint8*, int32, int32);
+int32 runtime_close(int32);
+int32 runtime_read(int32, void*, int32);
 
 static Sigset sigset_all = { ~(uint32)0, ~(uint32)0 };
 static Sigset sigset_none;
@@ -39,7 +39,7 @@ enum
 // Might be woken up spuriously; that's allowed.
 // Don't sleep longer than ns; ns < 0 means forever.
 void
-runtime·futexsleep(uint32 *addr, uint32 val, int64 ns)
+runtime_futexsleep(uint32 *addr, uint32 val, int64 ns)
 {
 	Timespec ts, *tsp;
 
@@ -59,16 +59,16 @@ runtime·futexsleep(uint32 *addr, uint32 val, int64 ns)
 	// as an errno.  Libpthread ignores the return value
 	// here, and so can we: as it says a few lines up,
 	// spurious wakeups are allowed.
-	runtime·futex(addr, FUTEX_WAIT, val, tsp, nil, 0);
+	runtime_futex(addr, FUTEX_WAIT, val, tsp, nil, 0);
 }
 
 // If any procs are sleeping on addr, wake up at most cnt.
 void
-runtime·futexwakeup(uint32 *addr, uint32 cnt)
+runtime_futexwakeup(uint32 *addr, uint32 cnt)
 {
 	int64 ret;
 
-	ret = runtime·futex(addr, FUTEX_WAKE, cnt, nil, nil, 0);
+	ret = runtime_futex(addr, FUTEX_WAKE, cnt, nil, nil, 0);
 
 	if(ret >= 0)
 		return;
@@ -76,11 +76,11 @@ runtime·futexwakeup(uint32 *addr, uint32 cnt)
 	// I don't know that futex wakeup can return
 	// EAGAIN or EINTR, but if it does, it would be
 	// safe to loop and call futex again.
-	runtime·printf("futexwakeup addr=%p returned %D\n", addr, ret);
+	runtime_printf("futexwakeup addr=%p returned %D\n", addr, ret);
 	*(int32*)0x1006 = 0x1006;
 }
 
-extern runtime·sched_getaffinity(uintptr pid, uintptr len, uintptr *buf);
+extern runtime_sched_getaffinity(uintptr pid, uintptr len, uintptr *buf);
 static int32
 getproccount(void)
 {
@@ -88,7 +88,7 @@ getproccount(void)
 	int32 r, cnt, i;
 
 	cnt = 0;
-	r = runtime·sched_getaffinity(0, sizeof(buf), buf);
+	r = runtime_sched_getaffinity(0, sizeof(buf), buf);
 	if(r > 0)
 	for(i = 0; i < r/sizeof(buf[0]); i++) {
 		t = buf[i];
@@ -124,7 +124,7 @@ enum
 };
 
 void
-runtime·newosproc(M *m, G *g, void *stk, void (*fn)(void))
+runtime_newosproc(M *m, G *g, void *stk, void (*fn)(void))
 {
 	int32 ret;
 	int32 flags;
@@ -142,84 +142,84 @@ runtime·newosproc(M *m, G *g, void *stk, void (*fn)(void))
 
 	m->tls[0] = m->id;	// so 386 asm can find it
 	if(0){
-		runtime·printf("newosproc stk=%p m=%p g=%p fn=%p clone=%p id=%d/%d ostk=%p\n",
-			stk, m, g, fn, runtime·clone, m->id, m->tls[0], &m);
+		runtime_printf("newosproc stk=%p m=%p g=%p fn=%p clone=%p id=%d/%d ostk=%p\n",
+			stk, m, g, fn, runtime_clone, m->id, m->tls[0], &m);
 	}
 
 	// Disable signals during clone, so that the new thread starts
 	// with signals disabled.  It will enable them in minit.
-	runtime·rtsigprocmask(SIG_SETMASK, &sigset_all, &oset, sizeof oset);
-	ret = runtime·clone(flags, stk, m, g, fn);
-	runtime·rtsigprocmask(SIG_SETMASK, &oset, nil, sizeof oset);
+	runtime_rtsigprocmask(SIG_SETMASK, &sigset_all, &oset, sizeof oset);
+	ret = runtime_clone(flags, stk, m, g, fn);
+	runtime_rtsigprocmask(SIG_SETMASK, &oset, nil, sizeof oset);
 
 	if(ret < 0) {
-		runtime·printf("runtime: failed to create new OS thread (have %d already; errno=%d)\n", runtime·mcount(), -ret);
-		runtime·throw("runtime.newosproc");
+		runtime_printf("runtime: failed to create new OS thread (have %d already; errno=%d)\n", runtime_mcount(), -ret);
+		runtime_throw("runtime.newosproc");
 	}
 }
 
 void
-runtime·osinit(void)
+runtime_osinit(void)
 {
-	runtime·ncpu = getproccount();
+	runtime_ncpu = getproccount();
 }
 
 void
-runtime·goenvs(void)
+runtime_goenvs(void)
 {
-	runtime·goenvs_unix();
+	runtime_goenvs_unix();
 }
 
 // Called to initialize a new m (including the bootstrap m).
 void
-runtime·minit(void)
+runtime_minit(void)
 {
 	// Initialize signal handling.
-	m->gsignal = runtime·malg(32*1024);	// OS X wants >=8K, Linux >=2K
-	runtime·signalstack(m->gsignal->stackguard - StackGuard, 32*1024);
-	runtime·rtsigprocmask(SIG_SETMASK, &sigset_none, nil, sizeof sigset_none);
+	m->gsignal = runtime_malg(32*1024);	// OS X wants >=8K, Linux >=2K
+	runtime_signalstack(m->gsignal->stackguard - StackGuard, 32*1024);
+	runtime_rtsigprocmask(SIG_SETMASK, &sigset_none, nil, sizeof sigset_none);
 }
 
 void
-runtime·sigpanic(void)
+runtime_sigpanic(void)
 {
 	switch(g->sig) {
 	case SIGBUS:
 		if(g->sigcode0 == BUS_ADRERR && g->sigcode1 < 0x1000) {
 			if(g->sigpc == 0)
-				runtime·panicstring("call of nil func value");
+				runtime_panicstring("call of nil func value");
 			}
-			runtime·panicstring("invalid memory address or nil pointer dereference");
-		runtime·printf("unexpected fault address %p\n", g->sigcode1);
-		runtime·throw("fault");
+			runtime_panicstring("invalid memory address or nil pointer dereference");
+		runtime_printf("unexpected fault address %p\n", g->sigcode1);
+		runtime_throw("fault");
 	case SIGSEGV:
 		if((g->sigcode0 == 0 || g->sigcode0 == SEGV_MAPERR || g->sigcode0 == SEGV_ACCERR) && g->sigcode1 < 0x1000) {
 			if(g->sigpc == 0)
-				runtime·panicstring("call of nil func value");
-			runtime·panicstring("invalid memory address or nil pointer dereference");
+				runtime_panicstring("call of nil func value");
+			runtime_panicstring("invalid memory address or nil pointer dereference");
 		}
-		runtime·printf("unexpected fault address %p\n", g->sigcode1);
-		runtime·throw("fault");
+		runtime_printf("unexpected fault address %p\n", g->sigcode1);
+		runtime_throw("fault");
 	case SIGFPE:
 		switch(g->sigcode0) {
 		case FPE_INTDIV:
-			runtime·panicstring("integer divide by zero");
+			runtime_panicstring("integer divide by zero");
 		case FPE_INTOVF:
-			runtime·panicstring("integer overflow");
+			runtime_panicstring("integer overflow");
 		}
-		runtime·panicstring("floating point error");
+		runtime_panicstring("floating point error");
 	}
-	runtime·panicstring(runtime·sigtab[g->sig].name);
+	runtime_panicstring(runtime_sigtab[g->sig].name);
 }
 
 uintptr
-runtime·memlimit(void)
+runtime_memlimit(void)
 {
 	Rlimit rl;
 	extern byte text[], end[];
 	uintptr used;
 
-	if(runtime·getrlimit(RLIMIT_AS, &rl) != 0)
+	if(runtime_getrlimit(RLIMIT_AS, &rl) != 0)
 		return 0;
 	if(rl.rlim_cur >= 0x7fffffff)
 		return 0;
@@ -241,7 +241,7 @@ runtime·memlimit(void)
 }
 
 void
-runtime·setprof(bool on)
+runtime_setprof(bool on)
 {
 	USED(on);
 }
@@ -251,9 +251,9 @@ static int8 badcallback[] = "runtime: cgo callback on thread not created by Go.\
 // This runs on a foreign stack, without an m or a g.  No stack split.
 #pragma textflag 7
 void
-runtime·badcallback(void)
+runtime_badcallback(void)
 {
-	runtime·write(2, badcallback, sizeof badcallback - 1);
+	runtime_write(2, badcallback, sizeof badcallback - 1);
 }
 
 static int8 badsignal[] = "runtime: signal received on thread not created by Go.\n";
@@ -261,7 +261,7 @@ static int8 badsignal[] = "runtime: signal received on thread not created by Go.
 // This runs on a foreign stack, without an m or a g.  No stack split.
 #pragma textflag 7
 void
-runtime·badsignal(void)
+runtime_badsignal(void)
 {
-	runtime·write(2, badsignal, sizeof badsignal - 1);
+	runtime_write(2, badsignal, sizeof badsignal - 1);
 }

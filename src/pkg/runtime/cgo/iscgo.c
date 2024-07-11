@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // The runtime package contains an uninitialized definition
-// for runtime·iscgo.  Override it to tell the runtime we're here.
+// for runtime_iscgo.  Override it to tell the runtime we're here.
 // There are various function pointers that should be set too,
 // but those depend on dynamic linker magic to get initialized
 // correctly, and sometimes they break.  This variable is a
@@ -11,4 +11,4 @@
 
 #include "../runtime.h"
 
-bool runtime·iscgo = 1;
+bool runtime_iscgo = 1;

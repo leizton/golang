@@ -11,32 +11,32 @@
  * it is called by the initialization before
  * main is run. to make it unique within a
  * package and also uncallable, the name,
- * normally "pkg.init", is altered to "pkg.init·1".
+ * normally "pkg.init", is altered to "pkg.init_1".
  */
 Sym*
 renameinit(void)
 {
 	static int initgen;
 
-	snprint(namebuf, sizeof(namebuf), "init·%d", ++initgen);
+	snprint(namebuf, sizeof(namebuf), "init_%d", ++initgen);
 	return lookup(namebuf);
 }
 
 /*
  * hand-craft the following initialization code
- *	var initdone· uint8 				(1)
+ *	var initdone_ uint8 				(1)
  *	func init()					(2)
- *		if initdone· != 0 {			(3)
- *			if initdone· == 2		(4)
+ *		if initdone_ != 0 {			(3)
+ *			if initdone_ == 2		(4)
  *				return
  *			throw();			(5)
  *		}
- *		initdone· = 1;				(6)
+ *		initdone_ = 1;				(6)
  *		// over all matching imported symbols
  *			<pkg>.init()			(7)
  *		{ <init stmts> }			(8)
- *		init·<n>() // if any			(9)
- *		initdone· = 2;				(10)
+ *		init_<n>() // if any			(9)
+ *		initdone_ = 2;				(10)
  *		return					(11)
  *	}
  */
@@ -65,7 +65,7 @@ anyinit(NodeList *n)
 		return 1;
 
 	// is there an explicit init function
-	snprint(namebuf, sizeof(namebuf), "init·1");
+	snprint(namebuf, sizeof(namebuf), "init_1");
 	s = lookup(namebuf);
 	if(s->def != N)
 		return 1;
@@ -106,7 +106,7 @@ fninit(NodeList *n)
 	r = nil;
 
 	// (1)
-	snprint(namebuf, sizeof(namebuf), "initdone·");
+	snprint(namebuf, sizeof(namebuf), "initdone_");
 	gatevar = newname(lookup(namebuf));
 	addvar(gatevar, types[TUINT8], PEXTERN);
 
@@ -163,7 +163,7 @@ fninit(NodeList *n)
 	// (9)
 	// could check that it is fn of no args/returns
 	for(i=1;; i++) {
-		snprint(namebuf, sizeof(namebuf), "init·%d", i);
+		snprint(namebuf, sizeof(namebuf), "init_%d", i);
 		s = lookup(namebuf);
 		if(s->def == N)
 			break;

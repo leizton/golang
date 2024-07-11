@@ -6,19 +6,19 @@
 #define SIG_IGN ((void*)1)
 
 // Linux-specific system calls
-int32	runtime·futex(uint32*, int32, uint32, Timespec*, uint32*, uint32);
-int32	runtime·clone(int32, void*, M*, G*, void(*)(void));
+int32	runtime_futex(uint32*, int32, uint32, Timespec*, uint32*, uint32);
+int32	runtime_clone(int32, void*, M*, G*, void(*)(void));
 
 struct Sigaction;
-int32	runtime·rt_sigaction(uintptr, struct Sigaction*, void*, uintptr);
-void	runtime·setsig(int32, void(*)(int32, Siginfo*, void*, G*), bool);
-void	runtime·sighandler(int32 sig, Siginfo *info, void *context, G *gp);
+int32	runtime_rt_sigaction(uintptr, struct Sigaction*, void*, uintptr);
+void	runtime_setsig(int32, void(*)(int32, Siginfo*, void*, G*), bool);
+void	runtime_sighandler(int32 sig, Siginfo *info, void *context, G *gp);
 
-void	runtime·sigaltstack(Sigaltstack*, Sigaltstack*);
-void	runtime·sigpanic(void);
-void runtime·setitimer(int32, Itimerval*, Itimerval*);
+void	runtime_sigaltstack(Sigaltstack*, Sigaltstack*);
+void	runtime_sigpanic(void);
+void runtime_setitimer(int32, Itimerval*, Itimerval*);
 
-void	runtime·raisesigpipe(void);
+void	runtime_raisesigpipe(void);
 
 #define	NSIG	65
 #define	SI_USER 0
@@ -31,7 +31,7 @@ struct Sigset
 {
 	uint32 mask[2];
 };
-void	runtime·rtsigprocmask(int32, Sigset*, Sigset*, int32);
+void	runtime_rtsigprocmask(int32, Sigset*, Sigset*, int32);
 #define SIG_SETMASK 2
 
 #define RLIMIT_AS 9
@@ -40,4 +40,4 @@ struct Rlimit {
 	uintptr	rlim_cur;
 	uintptr	rlim_max;
 };
-int32	runtime·getrlimit(int32, Rlimit*);
+int32	runtime_getrlimit(int32, Rlimit*);

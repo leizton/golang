@@ -11,7 +11,7 @@
 #include "malloc.h"
 
 void*
-runtime·MCache_Alloc(MCache *c, int32 sizeclass, uintptr size, int32 zeroed)
+runtime_MCache_Alloc(MCache *c, int32 sizeclass, uintptr size, int32 zeroed)
 {
 	MCacheList *l;
 	MLink *first, *v;
@@ -21,10 +21,10 @@ runtime·MCache_Alloc(MCache *c, int32 sizeclass, uintptr size, int32 zeroed)
 	l = &c->list[sizeclass];
 	if(l->list == nil) {
 		// Replenish using central lists.
-		n = runtime·MCentral_AllocList(&runtime·mheap.central[sizeclass],
-			runtime·class_to_transfercount[sizeclass], &first);
+		n = runtime_MCentral_AllocList(&runtime_mheap.central[sizeclass],
+			runtime_class_to_transfercount[sizeclass], &first);
 		if(n == 0)
-			runtime·throw("out of memory");
+			runtime_throw("out of memory");
 		l->list = first;
 		l->nlist = n;
 		c->size += n*size;
@@ -42,7 +42,7 @@ runtime·MCache_Alloc(MCache *c, int32 sizeclass, uintptr size, int32 zeroed)
 	if(zeroed) {
 		// block is zeroed iff second word is zero ...
 		if(size > sizeof(uintptr) && ((uintptr*)v)[1] != 0)
-			runtime·memclr((byte*)v, size);
+			runtime_memclr((byte*)v, size);
 		else {
 			// ... except for the link pointer
 			// that we used above; zero that.
@@ -71,14 +71,14 @@ ReleaseN(MCache *c, MCacheList *l, int32 n, int32 sizeclass)
 	l->nlist -= n;
 	if(l->nlist < l->nlistmin)
 		l->nlistmin = l->nlist;
-	c->size -= n*runtime·class_to_size[sizeclass];
+	c->size -= n*runtime_class_to_size[sizeclass];
 
 	// Return them to central free list.
-	runtime·MCentral_FreeList(&runtime·mheap.central[sizeclass], n, first);
+	runtime_MCentral_FreeList(&runtime_mheap.central[sizeclass], n, first);
 }
 
 void
-runtime·MCache_Free(MCache *c, void *v, int32 sizeclass, uintptr size)
+runtime_MCache_Free(MCache *c, void *v, int32 sizeclass, uintptr size)
 {
 	int32 i, n;
 	MCacheList *l;
@@ -96,7 +96,7 @@ runtime·MCache_Free(MCache *c, void *v, int32 sizeclass, uintptr size)
 
 	if(l->nlist >= MaxMCacheListLen) {
 		// Release a chunk back.
-		ReleaseN(c, l, runtime·class_to_transfercount[sizeclass], sizeclass);
+		ReleaseN(c, l, runtime_class_to_transfercount[sizeclass], sizeclass);
 	}
 
 	if(c->size >= MaxMCacheSize) {
@@ -121,7 +121,7 @@ runtime·MCache_Free(MCache *c, void *v, int32 sizeclass, uintptr size)
 }
 
 void
-runtime·MCache_ReleaseAll(MCache *c)
+runtime_MCache_ReleaseAll(MCache *c)
 {
 	int32 i;
 	MCacheList *l;

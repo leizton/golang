@@ -15,7 +15,7 @@ static void
 gwrite(void *v, int32 n)
 {
 	if(g == nil || g->writebuf == nil) {
-		runtime·write(2, v, n);
+		runtime_write(2, v, n);
 		return;
 	}
 
@@ -24,37 +24,37 @@ gwrite(void *v, int32 n)
 
 	if(n > g->writenbuf)
 		n = g->writenbuf;
-	runtime·memmove(g->writebuf, v, n);
+	runtime_memmove(g->writebuf, v, n);
 	g->writebuf += n;
 	g->writenbuf -= n;
 }
 
 void
-runtime·dump(byte *p, int32 n)
+runtime_dump(byte *p, int32 n)
 {
 	int32 i;
 
 	for(i=0; i<n; i++) {
-		runtime·printpointer((byte*)(p[i]>>4));
-		runtime·printpointer((byte*)(p[i]&0xf));
+		runtime_printpointer((byte*)(p[i]>>4));
+		runtime_printpointer((byte*)(p[i]&0xf));
 		if((i&15) == 15)
-			runtime·prints("\n");
+			runtime_prints("\n");
 		else
-			runtime·prints(" ");
+			runtime_prints(" ");
 	}
 	if(n & 15)
-		runtime·prints("\n");
+		runtime_prints("\n");
 }
 
 void
-runtime·prints(int8 *s)
+runtime_prints(int8 *s)
 {
-	gwrite(s, runtime·findnull((byte*)s));
+	gwrite(s, runtime_findnull((byte*)s));
 }
 
 #pragma textflag 7
 void
-runtime·printf(int8 *s, ...)
+runtime_printf(int8 *s, ...)
 {
 	byte *arg;
 
@@ -71,7 +71,7 @@ vprintf(int8 *s, byte *base)
 	uintptr arg, narg;
 	byte *v;
 
-	//runtime·lock(&debuglock);
+	//runtime_lock(&debuglock);
 
 	lp = p = s;
 	arg = 0;
@@ -124,46 +124,46 @@ vprintf(int8 *s, byte *base)
 		v = base+arg;
 		switch(*p) {
 		case 'a':
-			runtime·printslice(*(Slice*)v);
+			runtime_printslice(*(Slice*)v);
 			break;
 		case 'd':
-			runtime·printint(*(int32*)v);
+			runtime_printint(*(int32*)v);
 			break;
 		case 'D':
-			runtime·printint(*(int64*)v);
+			runtime_printint(*(int64*)v);
 			break;
 		case 'e':
-			runtime·printeface(*(Eface*)v);
+			runtime_printeface(*(Eface*)v);
 			break;
 		case 'f':
-			runtime·printfloat(*(float64*)v);
+			runtime_printfloat(*(float64*)v);
 			break;
 		case 'C':
-			runtime·printcomplex(*(Complex128*)v);
+			runtime_printcomplex(*(Complex128*)v);
 			break;
 		case 'i':
-			runtime·printiface(*(Iface*)v);
+			runtime_printiface(*(Iface*)v);
 			break;
 		case 'p':
-			runtime·printpointer(*(void**)v);
+			runtime_printpointer(*(void**)v);
 			break;
 		case 's':
-			runtime·prints(*(int8**)v);
+			runtime_prints(*(int8**)v);
 			break;
 		case 'S':
-			runtime·printstring(*(String*)v);
+			runtime_printstring(*(String*)v);
 			break;
 		case 't':
-			runtime·printbool(*(bool*)v);
+			runtime_printbool(*(bool*)v);
 			break;
 		case 'U':
-			runtime·printuint(*(uint64*)v);
+			runtime_printuint(*(uint64*)v);
 			break;
 		case 'x':
-			runtime·printhex(*(uint32*)v);
+			runtime_printhex(*(uint32*)v);
 			break;
 		case 'X':
-			runtime·printhex(*(uint64*)v);
+			runtime_printhex(*(uint64*)v);
 			break;
 		}
 		arg = narg;
@@ -172,28 +172,28 @@ vprintf(int8 *s, byte *base)
 	if(p > lp)
 		gwrite(lp, p-lp);
 
-	//runtime·unlock(&debuglock);
+	//runtime_unlock(&debuglock);
 }
 
 #pragma textflag 7
 void
-runtime·goprintf(String s, ...)
+runtime_goprintf(String s, ...)
 {
 	// Can assume s has terminating NUL because only
-	// the Go compiler generates calls to runtime·goprintf, using
+	// the Go compiler generates calls to runtime_goprintf, using
 	// string constants, and all the string constants have NULs.
 	vprintf((int8*)s.str, (byte*)(&s+1));
 }
 
 void
-runtime·printpc(void *p)
+runtime_printpc(void *p)
 {
-	runtime·prints("PC=");
-	runtime·printhex((uint64)runtime·getcallerpc(p));
+	runtime_prints("PC=");
+	runtime_printhex((uint64)runtime_getcallerpc(p));
 }
 
 void
-runtime·printbool(bool v)
+runtime_printbool(bool v)
 {
 	if(v) {
 		gwrite((byte*)"true", 4);
@@ -203,21 +203,21 @@ runtime·printbool(bool v)
 }
 
 void
-runtime·printfloat(float64 v)
+runtime_printfloat(float64 v)
 {
 	byte buf[20];
 	int32 e, s, i, n;
 	float64 h;
 
-	if(runtime·isNaN(v)) {
+	if(runtime_isNaN(v)) {
 		gwrite("NaN", 3);
 		return;
 	}
-	if(runtime·isInf(v, 1)) {
+	if(runtime_isInf(v, 1)) {
 		gwrite("+Inf", 4);
 		return;
 	}
-	if(runtime·isInf(v, -1)) {
+	if(runtime_isInf(v, -1)) {
 		gwrite("-Inf", 4);
 		return;
 	}
@@ -281,16 +281,16 @@ runtime·printfloat(float64 v)
 }
 
 void
-runtime·printcomplex(Complex128 v)
+runtime_printcomplex(Complex128 v)
 {
 	gwrite("(", 1);
-	runtime·printfloat(v.real);
-	runtime·printfloat(v.imag);
+	runtime_printfloat(v.real);
+	runtime_printfloat(v.imag);
 	gwrite("i)", 2);
 }
 
 void
-runtime·printuint(uint64 v)
+runtime_printuint(uint64 v)
 {
 	byte buf[100];
 	int32 i;
@@ -305,17 +305,17 @@ runtime·printuint(uint64 v)
 }
 
 void
-runtime·printint(int64 v)
+runtime_printint(int64 v)
 {
 	if(v < 0) {
 		gwrite("-", 1);
 		v = -v;
 	}
-	runtime·printuint(v);
+	runtime_printuint(v);
 }
 
 void
-runtime·printhex(uint64 v)
+runtime_printhex(uint64 v)
 {
 	static int8 *dig = "0123456789abcdef";
 	byte buf[100];
@@ -332,17 +332,17 @@ runtime·printhex(uint64 v)
 }
 
 void
-runtime·printpointer(void *p)
+runtime_printpointer(void *p)
 {
-	runtime·printhex((uint64)p);
+	runtime_printhex((uint64)p);
 }
 
 void
-runtime·printstring(String v)
+runtime_printstring(String v)
 {
-	extern uint32 runtime·maxstring;
+	extern uint32 runtime_maxstring;
 
-	if(v.len > runtime·maxstring) {
+	if(v.len > runtime_maxstring) {
 		gwrite("[invalid string]", 16);
 		return;
 	}
@@ -351,19 +351,19 @@ runtime·printstring(String v)
 }
 
 void
-runtime·printsp(void)
+runtime_printsp(void)
 {
 	gwrite(" ", 1);
 }
 
 void
-runtime·printnl(void)
+runtime_printnl(void)
 {
 	gwrite("\n", 1);
 }
 
 void
-runtime·typestring(Eface e, String s)
+runtime_typestring(Eface e, String s)
 {
 	s = *e.type->string;
 	FLUSH(&s);

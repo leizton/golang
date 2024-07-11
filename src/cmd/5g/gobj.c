@@ -526,7 +526,7 @@ genembedtramp(Type *rcvr, Type *method, Sym *newnam, int iface)
 out:
 	newplist()->name = newname(newnam);
 
-	//TEXT	main·S_test2(SB),7,$0
+	//TEXT	main_S_test2(SB),7,$0
 	p = pc;
 	gins(ATEXT, N, N);
 	p->from.type = D_OREG;
@@ -569,7 +569,7 @@ out:
 	}
 
 	f = dotlist[0].field;
-	//B	main·*Sub_test2(SB)
+	//B	main_*Sub_test2(SB)
 	if(isptr[f->type->etype])
 		f = f->type;
 	p = pc;

@@ -24,11 +24,11 @@ static void MCentral_Free(MCentral *c, void *v);
 
 // Initialize a single central free list.
 void
-runtime·MCentral_Init(MCentral *c, int32 sizeclass)
+runtime_MCentral_Init(MCentral *c, int32 sizeclass)
 {
 	c->sizeclass = sizeclass;
-	runtime·MSpanList_Init(&c->nonempty);
-	runtime·MSpanList_Init(&c->empty);
+	runtime_MSpanList_Init(&c->nonempty);
+	runtime_MSpanList_Init(&c->empty);
 }
 
 // Allocate up to n objects from the central free list.
@@ -36,16 +36,16 @@ runtime·MCentral_Init(MCentral *c, int32 sizeclass)
 // The objects are linked together by their first words.
 // On return, *pstart points at the first object and *pend at the last.
 int32
-runtime·MCentral_AllocList(MCentral *c, int32 n, MLink **pfirst)
+runtime_MCentral_AllocList(MCentral *c, int32 n, MLink **pfirst)
 {
 	MLink *first, *last, *v;
 	int32 i;
 
-	runtime·lock(c);
+	runtime_lock(c);
 	// Replenish central list if empty.
-	if(runtime·MSpanList_IsEmpty(&c->nonempty)) {
+	if(runtime_MSpanList_IsEmpty(&c->nonempty)) {
 		if(!MCentral_Grow(c)) {
-			runtime·unlock(c);
+			runtime_unlock(c);
 			*pfirst = nil;
 			return 0;
 		}
@@ -62,7 +62,7 @@ runtime·MCentral_AllocList(MCentral *c, int32 n, MLink **pfirst)
 	last->next = nil;
 	c->nfree -= i;
 
-	runtime·unlock(c);
+	runtime_unlock(c);
 	*pfirst = first;
 	return i;
 }
@@ -74,15 +74,15 @@ MCentral_Alloc(MCentral *c)
 	MSpan *s;
 	MLink *v;
 
-	if(runtime·MSpanList_IsEmpty(&c->nonempty))
+	if(runtime_MSpanList_IsEmpty(&c->nonempty))
 		return nil;
 	s = c->nonempty.next;
 	s->ref++;
 	v = s->freelist;
 	s->freelist = v->next;
 	if(s->freelist == nil) {
-		runtime·MSpanList_Remove(s);
-		runtime·MSpanList_Insert(&c->empty, s);
+		runtime_MSpanList_Remove(s);
+		runtime_MSpanList_Insert(&c->empty, s);
 	}
 	return v;
 }
@@ -92,7 +92,7 @@ MCentral_Alloc(MCentral *c)
 // The objects are linked together by their first words.
 // On return, *pstart points at the first object and *pend at the last.
 void
-runtime·MCentral_FreeList(MCentral *c, int32 n, MLink *start)
+runtime_MCentral_FreeList(MCentral *c, int32 n, MLink *start)
 {
 	MLink *v, *next;
 
@@ -101,12 +101,12 @@ runtime·MCentral_FreeList(MCentral *c, int32 n, MLink *start)
 	// the transfer cache optimization in the TODO above.
 	USED(n);
 
-	runtime·lock(c);
+	runtime_lock(c);
 	for(v=start; v; v=next) {
 		next = v->next;
 		MCentral_Free(c, v);
 	}
-	runtime·unlock(c);
+	runtime_unlock(c);
 }
 
 // Helper: free one object back into the central free list.
@@ -118,14 +118,14 @@ MCentral_Free(MCentral *c, void *v)
 	int32 size;
 
 	// Find span for v.
-	s = runtime·MHeap_Lookup(&runtime·mheap, v);
+	s = runtime_MHeap_Lookup(&runtime_mheap, v);
 	if(s == nil || s->ref == 0)
-		runtime·throw("invalid free");
+		runtime_throw("invalid free");
 
 	// Move to nonempty if necessary.
 	if(s->freelist == nil) {
-		runtime·MSpanList_Remove(s);
-		runtime·MSpanList_Insert(&c->nonempty, s);
+		runtime_MSpanList_Remove(s);
+		runtime_MSpanList_Insert(&c->nonempty, s);
 	}
 
 	// Add v back to s's free list.
@@ -136,26 +136,26 @@ MCentral_Free(MCentral *c, void *v)
 
 	// If s is completely freed, return it to the heap.
 	if(--s->ref == 0) {
-		size = runtime·class_to_size[c->sizeclass];
-		runtime·MSpanList_Remove(s);
-		runtime·unmarkspan((byte*)(s->start<<PageShift), s->npages<<PageShift);
+		size = runtime_class_to_size[c->sizeclass];
+		runtime_MSpanList_Remove(s);
+		runtime_unmarkspan((byte*)(s->start<<PageShift), s->npages<<PageShift);
 		*(uintptr*)(s->start<<PageShift) = 1;  // needs zeroing
 		s->freelist = nil;
 		c->nfree -= (s->npages << PageShift) / size;
-		runtime·unlock(c);
-		runtime·MHeap_Free(&runtime·mheap, s, 0);
-		runtime·lock(c);
+		runtime_unlock(c);
+		runtime_MHeap_Free(&runtime_mheap, s, 0);
+		runtime_lock(c);
 	}
 }
 
 void
-runtime·MGetSizeClassInfo(int32 sizeclass, uintptr *sizep, int32 *npagesp, int32 *nobj)
+runtime_MGetSizeClassInfo(int32 sizeclass, uintptr *sizep, int32 *npagesp, int32 *nobj)
 {
 	int32 size;
 	int32 npages;
 
-	npages = runtime·class_to_allocnpages[sizeclass];
-	size = runtime·class_to_size[sizeclass];
+	npages = runtime_class_to_allocnpages[sizeclass];
+	size = runtime_class_to_size[sizeclass];
 	*npagesp = npages;
 	*sizep = size;
 	*nobj = (npages << PageShift) / size;
@@ -172,12 +172,12 @@ MCentral_Grow(MCentral *c)
 	byte *p;
 	MSpan *s;
 
-	runtime·unlock(c);
-	runtime·MGetSizeClassInfo(c->sizeclass, &size, &npages, &n);
-	s = runtime·MHeap_Alloc(&runtime·mheap, npages, c->sizeclass, 0);
+	runtime_unlock(c);
+	runtime_MGetSizeClassInfo(c->sizeclass, &size, &npages, &n);
+	s = runtime_MHeap_Alloc(&runtime_mheap, npages, c->sizeclass, 0);
 	if(s == nil) {
 		// TODO(rsc): Log out of memory
-		runtime·lock(c);
+		runtime_lock(c);
 		return false;
 	}
 
@@ -192,10 +192,10 @@ MCentral_Grow(MCentral *c)
 		p += size;
 	}
 	*tailp = nil;
-	runtime·markspan((byte*)(s->start<<PageShift), size, n, size*n < (s->npages<<PageShift));
+	runtime_markspan((byte*)(s->start<<PageShift), size, n, size*n < (s->npages<<PageShift));
 
-	runtime·lock(c);
+	runtime_lock(c);
 	c->nfree += n;
-	runtime·MSpanList_Insert(&c->nonempty, s);
+	runtime_MSpanList_Insert(&c->nonempty, s);
 	return true;
 }

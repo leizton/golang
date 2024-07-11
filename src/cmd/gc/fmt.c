@@ -595,7 +595,7 @@ typefmt(Fmt *fp, Type *t)
 			// fallthrough
 		case FExp:
 			if(t->sym->pkg == localpkg && t->vargen)
-				return fmtprint(fp, "%S·%d", t->sym, t->vargen);
+				return fmtprint(fp, "%S_%d", t->sym, t->vargen);
 			break;
 		}
 		return fmtprint(fp, "%S", t->sym);

@@ -1180,7 +1180,7 @@ methodsym(Sym *nsym, Type *t0, int iface)
 	if(iface) {
 		dowidth(t0);
 		if(t0->width < types[tptr]->width)
-			suffix = "·i";
+			suffix = "_i";
 	}
 	if((spkg == nil || nsym->pkg != spkg) && !exportname(nsym->name)) {
 		if(t0->sym == S && isptr[t0->etype])

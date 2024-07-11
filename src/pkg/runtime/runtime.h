@@ -394,36 +394,36 @@ struct	Alg
 	void	(*copy)(uintptr, void*, void*);
 };
 
-extern	Alg	runtime·algarray[Amax];
+extern	Alg	runtime_algarray[Amax];
 
-void	runtime·memhash(uintptr*, uintptr, void*);
-void	runtime·nohash(uintptr*, uintptr, void*);
-void	runtime·strhash(uintptr*, uintptr, void*);
-void	runtime·interhash(uintptr*, uintptr, void*);
-void	runtime·nilinterhash(uintptr*, uintptr, void*);
+void	runtime_memhash(uintptr*, uintptr, void*);
+void	runtime_nohash(uintptr*, uintptr, void*);
+void	runtime_strhash(uintptr*, uintptr, void*);
+void	runtime_interhash(uintptr*, uintptr, void*);
+void	runtime_nilinterhash(uintptr*, uintptr, void*);
 
-void	runtime·memequal(bool*, uintptr, void*, void*);
-void	runtime·noequal(bool*, uintptr, void*, void*);
-void	runtime·strequal(bool*, uintptr, void*, void*);
-void	runtime·interequal(bool*, uintptr, void*, void*);
-void	runtime·nilinterequal(bool*, uintptr, void*, void*);
+void	runtime_memequal(bool*, uintptr, void*, void*);
+void	runtime_noequal(bool*, uintptr, void*, void*);
+void	runtime_strequal(bool*, uintptr, void*, void*);
+void	runtime_interequal(bool*, uintptr, void*, void*);
+void	runtime_nilinterequal(bool*, uintptr, void*, void*);
 
-void	runtime·memprint(uintptr, void*);
-void	runtime·strprint(uintptr, void*);
-void	runtime·interprint(uintptr, void*);
-void	runtime·nilinterprint(uintptr, void*);
+void	runtime_memprint(uintptr, void*);
+void	runtime_strprint(uintptr, void*);
+void	runtime_interprint(uintptr, void*);
+void	runtime_nilinterprint(uintptr, void*);
 
-void	runtime·memcopy(uintptr, void*, void*);
-void	runtime·memcopy8(uintptr, void*, void*);
-void	runtime·memcopy16(uintptr, void*, void*);
-void	runtime·memcopy32(uintptr, void*, void*);
-void	runtime·memcopy64(uintptr, void*, void*);
-void	runtime·memcopy128(uintptr, void*, void*);
-void	runtime·memcopy(uintptr, void*, void*);
-void	runtime·strcopy(uintptr, void*, void*);
-void	runtime·algslicecopy(uintptr, void*, void*);
-void	runtime·intercopy(uintptr, void*, void*);
-void	runtime·nilintercopy(uintptr, void*, void*);
+void	runtime_memcopy(uintptr, void*, void*);
+void	runtime_memcopy8(uintptr, void*, void*);
+void	runtime_memcopy16(uintptr, void*, void*);
+void	runtime_memcopy32(uintptr, void*, void*);
+void	runtime_memcopy64(uintptr, void*, void*);
+void	runtime_memcopy128(uintptr, void*, void*);
+void	runtime_memcopy(uintptr, void*, void*);
+void	runtime_strcopy(uintptr, void*, void*);
+void	runtime_algslicecopy(uintptr, void*, void*);
+void	runtime_intercopy(uintptr, void*, void*);
+void	runtime_nilintercopy(uintptr, void*, void*);
 
 /*
  * deferred subroutine calls
@@ -453,128 +453,128 @@ struct Panic
 /*
  * external data
  */
-extern	String	runtime·emptystring;
-G*	runtime·allg;
-G*	runtime·lastg;
-M*	runtime·allm;
-extern	int32	runtime·gomaxprocs;
-extern	bool	runtime·singleproc;
-extern	uint32	runtime·panicking;
-extern	int32	runtime·gcwaiting;		// gc is waiting to run
-int8*	runtime·goos;
-int32	runtime·ncpu;
-extern	bool	runtime·iscgo;
-extern  void (*runtime·sysargs)(int32, uint8**);
+extern	String	runtime_emptystring;
+G*	runtime_allg;
+G*	runtime_lastg;
+M*	runtime_allm;
+extern	int32	runtime_gomaxprocs;
+extern	bool	runtime_singleproc;
+extern	uint32	runtime_panicking;
+extern	int32	runtime_gcwaiting;		// gc is waiting to run
+int8*	runtime_goos;
+int32	runtime_ncpu;
+extern	bool	runtime_iscgo;
+extern  void (*runtime_sysargs)(int32, uint8**);
 
 /*
  * common functions and data
  */
-int32	runtime·strcmp(byte*, byte*);
-byte*	runtime·strstr(byte*, byte*);
-int32	runtime·findnull(byte*);
-int32	runtime·findnullw(uint16*);
-void	runtime·dump(byte*, int32);
-int32	runtime·runetochar(byte*, int32);
-int32	runtime·charntorune(int32*, uint8*, int32);
+int32	runtime_strcmp(byte*, byte*);
+byte*	runtime_strstr(byte*, byte*);
+int32	runtime_findnull(byte*);
+int32	runtime_findnullw(uint16*);
+void	runtime_dump(byte*, int32);
+int32	runtime_runetochar(byte*, int32);
+int32	runtime_charntorune(int32*, uint8*, int32);
 
 /*
  * very low level c-called
  */
 #define FLUSH(x)	USED(x)
 
-void	runtime·gogo(Gobuf*, uintptr);
-void	runtime·gogocall(Gobuf*, void(*)(void));
-void	runtime·gosave(Gobuf*);
-void	runtime·lessstack(void);
-void	runtime·goargs(void);
-void	runtime·goenvs(void);
-void	runtime·goenvs_unix(void);
-void*	runtime·getu(void);
-void	runtime·throw(int8*);
-void	runtime·panicstring(int8*);
-void	runtime·prints(int8*);
-void	runtime·printf(int8*, ...);
-byte*	runtime·mchr(byte*, byte, byte*);
-int32	runtime·mcmp(byte*, byte*, uint32);
-void	runtime·memmove(void*, void*, uint32);
-void*	runtime·mal(uintptr);
-String	runtime·catstring(String, String);
-String	runtime·gostring(byte*);
-String  runtime·gostringn(byte*, int32);
-Slice	runtime·gobytes(byte*, int32);
-String	runtime·gostringnocopy(byte*);
-String	runtime·gostringw(uint16*);
-void	runtime·initsig(void);
-void	runtime·sigenable(uint32 sig);
-int32	runtime·gotraceback(void);
-void	runtime·goroutineheader(G*);
-void	runtime·traceback(uint8 *pc, uint8 *sp, uint8 *lr, G* gp);
-void	runtime·tracebackothers(G*);
-int32	runtime·write(int32, void*, int32);
-int32	runtime·mincore(void*, uintptr, byte*);
-bool	runtime·cas(uint32*, uint32, uint32);
-bool	runtime·casp(void**, void*, void*);
+void	runtime_gogo(Gobuf*, uintptr);
+void	runtime_gogocall(Gobuf*, void(*)(void));
+void	runtime_gosave(Gobuf*);
+void	runtime_lessstack(void);
+void	runtime_goargs(void);
+void	runtime_goenvs(void);
+void	runtime_goenvs_unix(void);
+void*	runtime_getu(void);
+void	runtime_throw(int8*);
+void	runtime_panicstring(int8*);
+void	runtime_prints(int8*);
+void	runtime_printf(int8*, ...);
+byte*	runtime_mchr(byte*, byte, byte*);
+int32	runtime_mcmp(byte*, byte*, uint32);
+void	runtime_memmove(void*, void*, uint32);
+void*	runtime_mal(uintptr);
+String	runtime_catstring(String, String);
+String	runtime_gostring(byte*);
+String  runtime_gostringn(byte*, int32);
+Slice	runtime_gobytes(byte*, int32);
+String	runtime_gostringnocopy(byte*);
+String	runtime_gostringw(uint16*);
+void	runtime_initsig(void);
+void	runtime_sigenable(uint32 sig);
+int32	runtime_gotraceback(void);
+void	runtime_goroutineheader(G*);
+void	runtime_traceback(uint8 *pc, uint8 *sp, uint8 *lr, G* gp);
+void	runtime_tracebackothers(G*);
+int32	runtime_write(int32, void*, int32);
+int32	runtime_mincore(void*, uintptr, byte*);
+bool	runtime_cas(uint32*, uint32, uint32);
+bool	runtime_casp(void**, void*, void*);
 // Don't confuse with XADD x86 instruction,
 // this one is actually 'addx', that is, add-and-fetch.
-uint32	runtime·xadd(uint32 volatile*, int32);
-uint32	runtime·xchg(uint32 volatile*, uint32);
-uint32	runtime·atomicload(uint32 volatile*);
-void	runtime·atomicstore(uint32 volatile*, uint32);
-void*	runtime·atomicloadp(void* volatile*);
-void	runtime·atomicstorep(void* volatile*, void*);
-void	runtime·jmpdefer(byte*, void*);
-void	runtime·exit1(int32);
-void	runtime·ready(G*);
-byte*	runtime·getenv(int8*);
-int32	runtime·atoi(byte*);
-void	runtime·newosproc(M *m, G *g, void *stk, void (*fn)(void));
-void	runtime·signalstack(byte*, int32);
-G*	runtime·malg(int32);
-void	runtime·asminit(void);
-void	runtime·minit(void);
-Func*	runtime·findfunc(uintptr);
-int32	runtime·funcline(Func*, uintptr);
-void*	runtime·stackalloc(uint32);
-void	runtime·stackfree(void*, uintptr);
-MCache*	runtime·allocmcache(void);
-void	runtime·mallocinit(void);
-bool	runtime·ifaceeq_c(Iface, Iface);
-bool	runtime·efaceeq_c(Eface, Eface);
-uintptr	runtime·ifacehash(Iface);
-uintptr	runtime·efacehash(Eface);
-void*	runtime·malloc(uintptr size);
-void	runtime·free(void *v);
-bool	runtime·addfinalizer(void*, void(*fn)(void*), int32);
-void	runtime·runpanic(Panic*);
-void*	runtime·getcallersp(void*);
-int32	runtime·mcount(void);
-int32	runtime·gcount(void);
-void	runtime·mcall(void(*)(G*));
-uint32	runtime·fastrand1(void);
+uint32	runtime_xadd(uint32 volatile*, int32);
+uint32	runtime_xchg(uint32 volatile*, uint32);
+uint32	runtime_atomicload(uint32 volatile*);
+void	runtime_atomicstore(uint32 volatile*, uint32);
+void*	runtime_atomicloadp(void* volatile*);
+void	runtime_atomicstorep(void* volatile*, void*);
+void	runtime_jmpdefer(byte*, void*);
+void	runtime_exit1(int32);
+void	runtime_ready(G*);
+byte*	runtime_getenv(int8*);
+int32	runtime_atoi(byte*);
+void	runtime_newosproc(M *m, G *g, void *stk, void (*fn)(void));
+void	runtime_signalstack(byte*, int32);
+G*	runtime_malg(int32);
+void	runtime_asminit(void);
+void	runtime_minit(void);
+Func*	runtime_findfunc(uintptr);
+int32	runtime_funcline(Func*, uintptr);
+void*	runtime_stackalloc(uint32);
+void	runtime_stackfree(void*, uintptr);
+MCache*	runtime_allocmcache(void);
+void	runtime_mallocinit(void);
+bool	runtime_ifaceeq_c(Iface, Iface);
+bool	runtime_efaceeq_c(Eface, Eface);
+uintptr	runtime_ifacehash(Iface);
+uintptr	runtime_efacehash(Eface);
+void*	runtime_malloc(uintptr size);
+void	runtime_free(void *v);
+bool	runtime_addfinalizer(void*, void(*fn)(void*), int32);
+void	runtime_runpanic(Panic*);
+void*	runtime_getcallersp(void*);
+int32	runtime_mcount(void);
+int32	runtime_gcount(void);
+void	runtime_mcall(void(*)(G*));
+uint32	runtime_fastrand1(void);
 
-void	runtime·exit(int32);
-void	runtime·breakpoint(void);
-void	runtime·gosched(void);
-void	runtime·tsleep(int64);
-M*	runtime·newm(void);
-void	runtime·goexit(void);
-void	runtime·asmcgocall(void (*fn)(void*), void*);
-void	runtime·entersyscall(void);
-void	runtime·exitsyscall(void);
-G*	runtime·newproc1(byte*, byte*, int32, int32, void*);
-bool	runtime·sigsend(int32 sig);
-int32	runtime·callers(int32, uintptr*, int32);
-int32	runtime·gentraceback(byte*, byte*, byte*, G*, int32, uintptr*, int32);
-int64	runtime·nanotime(void);
-void	runtime·dopanic(int32);
-void	runtime·startpanic(void);
-void	runtime·sigprof(uint8 *pc, uint8 *sp, uint8 *lr, G *gp);
-void	runtime·resetcpuprofiler(int32);
-void	runtime·setcpuprofilerate(void(*)(uintptr*, int32), int32);
-void	runtime·usleep(uint32);
-int64	runtime·cputicks(void);
+void	runtime_exit(int32);
+void	runtime_breakpoint(void);
+void	runtime_gosched(void);
+void	runtime_tsleep(int64);
+M*	runtime_newm(void);
+void	runtime_goexit(void);
+void	runtime_asmcgocall(void (*fn)(void*), void*);
+void	runtime_entersyscall(void);
+void	runtime_exitsyscall(void);
+G*	runtime_newproc1(byte*, byte*, int32, int32, void*);
+bool	runtime_sigsend(int32 sig);
+int32	runtime_callers(int32, uintptr*, int32);
+int32	runtime_gentraceback(byte*, byte*, byte*, G*, int32, uintptr*, int32);
+int64	runtime_nanotime(void);
+void	runtime_dopanic(int32);
+void	runtime_startpanic(void);
+void	runtime_sigprof(uint8 *pc, uint8 *sp, uint8 *lr, G *gp);
+void	runtime_resetcpuprofiler(int32);
+void	runtime_setcpuprofilerate(void(*)(uintptr*, int32), int32);
+void	runtime_usleep(uint32);
+int64	runtime_cputicks(void);
 
-#pragma	varargck	argpos	runtime·printf	1
+#pragma	varargck	argpos	runtime_printf	1
 #pragma	varargck	type	"d"	int32
 #pragma	varargck	type	"d"	uint32
 #pragma	varargck	type	"D"	int64
@@ -589,9 +589,9 @@ int64	runtime·cputicks(void);
 #pragma	varargck	type	"s"	uint8*
 #pragma	varargck	type	"S"	String
 
-void	runtime·stoptheworld(void);
-void	runtime·starttheworld(bool);
-extern uint32 runtime·worldsema;
+void	runtime_stoptheworld(void);
+void	runtime_starttheworld(bool);
+extern uint32 runtime_worldsema;
 
 /*
  * mutual exclusion locks.  in the uncontended case,
@@ -599,8 +599,8 @@ extern uint32 runtime·worldsema;
  * but on the contention path they sleep in the kernel.
  * a zeroed Lock is unlocked (no need to initialize each lock).
  */
-void	runtime·lock(Lock*);
-void	runtime·unlock(Lock*);
+void	runtime_lock(Lock*);
+void	runtime_unlock(Lock*);
 
 /*
  * sleep and wakeup on one-time events.
@@ -621,20 +621,20 @@ void	runtime·unlock(Lock*);
  * can be sure that no other goroutine is calling
  * notewakeup.
  */
-void	runtime·noteclear(Note*);
-void	runtime·notesleep(Note*);
-void	runtime·notewakeup(Note*);
-void	runtime·notetsleep(Note*, int64);
+void	runtime_noteclear(Note*);
+void	runtime_notesleep(Note*);
+void	runtime_notewakeup(Note*);
+void	runtime_notetsleep(Note*, int64);
 
 /*
  * low-level synchronization for implementing the above
  */
-uintptr	runtime·semacreate(void);
-int32	runtime·semasleep(int64);
-void	runtime·semawakeup(M*);
+uintptr	runtime_semacreate(void);
+int32	runtime_semasleep(int64);
+void	runtime_semawakeup(M*);
 // or
-void	runtime·futexsleep(uint32*, uint32, int64);
-void	runtime·futexwakeup(uint32*, uint32);
+void	runtime_futexsleep(uint32*, uint32, int64);
+void	runtime_futexwakeup(uint32*, uint32);
 
 /*
  * This is consistent across Linux and BSD.
@@ -646,89 +646,89 @@ void	runtime·futexwakeup(uint32*, uint32);
 /*
  * low level C-called
  */
-uint8*	runtime·mmap(byte*, uintptr, int32, int32, int32, uint32);
-void	runtime·munmap(byte*, uintptr);
-void	runtime·madvise(byte*, uintptr, int32);
-void	runtime·memclr(byte*, uintptr);
-void	runtime·setcallerpc(void*, void*);
-void*	runtime·getcallerpc(void*);
+uint8*	runtime_mmap(byte*, uintptr, int32, int32, int32, uint32);
+void	runtime_munmap(byte*, uintptr);
+void	runtime_madvise(byte*, uintptr, int32);
+void	runtime_memclr(byte*, uintptr);
+void	runtime_setcallerpc(void*, void*);
+void*	runtime_getcallerpc(void*);
 
 /*
  * runtime go-called
  */
-void	runtime·printbool(bool);
-void	runtime·printfloat(float64);
-void	runtime·printint(int64);
-void	runtime·printiface(Iface);
-void	runtime·printeface(Eface);
-void	runtime·printstring(String);
-void	runtime·printpc(void*);
-void	runtime·printpointer(void*);
-void	runtime·printuint(uint64);
-void	runtime·printhex(uint64);
-void	runtime·printslice(Slice);
-void	runtime·printcomplex(Complex128);
-void	reflect·call(byte*, byte*, uint32);
-void	runtime·panic(Eface);
-void	runtime·panicindex(void);
-void	runtime·panicslice(void);
+void	runtime_printbool(bool);
+void	runtime_printfloat(float64);
+void	runtime_printint(int64);
+void	runtime_printiface(Iface);
+void	runtime_printeface(Eface);
+void	runtime_printstring(String);
+void	runtime_printpc(void*);
+void	runtime_printpointer(void*);
+void	runtime_printuint(uint64);
+void	runtime_printhex(uint64);
+void	runtime_printslice(Slice);
+void	runtime_printcomplex(Complex128);
+void	reflect_call(byte*, byte*, uint32);
+void	runtime_panic(Eface);
+void	runtime_panicindex(void);
+void	runtime_panicslice(void);
 
 /*
  * runtime c-called (but written in Go)
  */
-void	runtime·printany(Eface);
-void	runtime·newTypeAssertionError(String*, String*, String*, String*, Eface*);
-void	runtime·newErrorString(String, Eface*);
-void	runtime·fadd64c(uint64, uint64, uint64*);
-void	runtime·fsub64c(uint64, uint64, uint64*);
-void	runtime·fmul64c(uint64, uint64, uint64*);
-void	runtime·fdiv64c(uint64, uint64, uint64*);
-void	runtime·fneg64c(uint64, uint64*);
-void	runtime·f32to64c(uint32, uint64*);
-void	runtime·f64to32c(uint64, uint32*);
-void	runtime·fcmp64c(uint64, uint64, int32*, bool*);
-void	runtime·fintto64c(int64, uint64*);
-void	runtime·f64tointc(uint64, int64*, bool*);
+void	runtime_printany(Eface);
+void	runtime_newTypeAssertionError(String*, String*, String*, String*, Eface*);
+void	runtime_newErrorString(String, Eface*);
+void	runtime_fadd64c(uint64, uint64, uint64*);
+void	runtime_fsub64c(uint64, uint64, uint64*);
+void	runtime_fmul64c(uint64, uint64, uint64*);
+void	runtime_fdiv64c(uint64, uint64, uint64*);
+void	runtime_fneg64c(uint64, uint64*);
+void	runtime_f32to64c(uint32, uint64*);
+void	runtime_f64to32c(uint64, uint32*);
+void	runtime_fcmp64c(uint64, uint64, int32*, bool*);
+void	runtime_fintto64c(int64, uint64*);
+void	runtime_f64tointc(uint64, int64*, bool*);
 
 /*
  * wrapped for go users
  */
-float64	runtime·Inf(int32 sign);
-float64	runtime·NaN(void);
-float32	runtime·float32frombits(uint32 i);
-uint32	runtime·float32tobits(float32 f);
-float64	runtime·float64frombits(uint64 i);
-uint64	runtime·float64tobits(float64 f);
-float64	runtime·frexp(float64 d, int32 *ep);
-bool	runtime·isInf(float64 f, int32 sign);
-bool	runtime·isNaN(float64 f);
-float64	runtime·ldexp(float64 d, int32 e);
-float64	runtime·modf(float64 d, float64 *ip);
-void	runtime·semacquire(uint32*);
-void	runtime·semrelease(uint32*);
-int32	runtime·gomaxprocsfunc(int32 n);
-void	runtime·procyield(uint32);
-void	runtime·osyield(void);
-void	runtime·LockOSThread(void);
-void	runtime·UnlockOSThread(void);
+float64	runtime_Inf(int32 sign);
+float64	runtime_NaN(void);
+float32	runtime_float32frombits(uint32 i);
+uint32	runtime_float32tobits(float32 f);
+float64	runtime_float64frombits(uint64 i);
+uint64	runtime_float64tobits(float64 f);
+float64	runtime_frexp(float64 d, int32 *ep);
+bool	runtime_isInf(float64 f, int32 sign);
+bool	runtime_isNaN(float64 f);
+float64	runtime_ldexp(float64 d, int32 e);
+float64	runtime_modf(float64 d, float64 *ip);
+void	runtime_semacquire(uint32*);
+void	runtime_semrelease(uint32*);
+int32	runtime_gomaxprocsfunc(int32 n);
+void	runtime_procyield(uint32);
+void	runtime_osyield(void);
+void	runtime_LockOSThread(void);
+void	runtime_UnlockOSThread(void);
 
-void	runtime·mapassign(MapType*, Hmap*, byte*, byte*);
-void	runtime·mapaccess(MapType*, Hmap*, byte*, byte*, bool*);
-void	runtime·mapiternext(struct hash_iter*);
-bool	runtime·mapiterkey(struct hash_iter*, void*);
-void	runtime·mapiterkeyvalue(struct hash_iter*, void*, void*);
-Hmap*	runtime·makemap_c(MapType*, int64);
+void	runtime_mapassign(MapType*, Hmap*, byte*, byte*);
+void	runtime_mapaccess(MapType*, Hmap*, byte*, byte*, bool*);
+void	runtime_mapiternext(struct hash_iter*);
+bool	runtime_mapiterkey(struct hash_iter*, void*);
+void	runtime_mapiterkeyvalue(struct hash_iter*, void*, void*);
+Hmap*	runtime_makemap_c(MapType*, int64);
 
-Hchan*	runtime·makechan_c(ChanType*, int64);
-void	runtime·chansend(ChanType*, Hchan*, byte*, bool*);
-void	runtime·chanrecv(ChanType*, Hchan*, byte*, bool*, bool*);
-int32	runtime·chanlen(Hchan*);
-int32	runtime·chancap(Hchan*);
-bool	runtime·showframe(Func*);
+Hchan*	runtime_makechan_c(ChanType*, int64);
+void	runtime_chansend(ChanType*, Hchan*, byte*, bool*);
+void	runtime_chanrecv(ChanType*, Hchan*, byte*, bool*, bool*);
+int32	runtime_chanlen(Hchan*);
+int32	runtime_chancap(Hchan*);
+bool	runtime_showframe(Func*);
 
-void	runtime·ifaceE2I(struct InterfaceType*, Eface, Iface*);
+void	runtime_ifaceE2I(struct InterfaceType*, Eface, Iface*);
 
-uintptr	runtime·memlimit(void);
+uintptr	runtime_memlimit(void);
 
 // If appropriate, ask the operating system to control whether this
 // thread should receive profiling signals.  This is only necessary on OS X.
@@ -738,4 +738,4 @@ uintptr	runtime·memlimit(void);
 // away the profiling signal when threads go to sleep, so that OS X
 // is forced to deliver the signal to a thread that's actually running.
 // This is a no-op on other systems.
-void	runtime·setprof(bool);
+void	runtime_setprof(bool);

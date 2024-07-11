@@ -14,8 +14,8 @@
 #define FLAGS_C (1U << 29)
 #define FLAGS_V (1U << 28)
 
-void	runtime·abort(void);
-void	math·sqrtC(uint64, uint64*);
+void	runtime_abort(void);
+void	math_sqrtC(uint64, uint64*);
 
 static	uint32	trace = 0;
 
@@ -23,8 +23,8 @@ static void
 fabort(void)
 {
 	if (1) {
-		runtime·printf("Unsupported floating point instruction\n");
-		runtime·abort();
+		runtime_printf("Unsupported floating point instruction\n");
+		runtime_abort();
 	}
 }
 
@@ -52,7 +52,7 @@ fprint(void)
 {
 	uint32 i;
 	for (i = 0; i < 16; i++) {
-		runtime·printf("\tf%d:\t%X %X\n", i, m->freghi[i], m->freglo[i]);
+		runtime_printf("\tf%d:\t%X %X\n", i, m->freghi[i], m->freglo[i]);
 	}
 }
 
@@ -61,7 +61,7 @@ d2f(uint64 d)
 {
 	uint32 x;
 
-	runtime·f64to32c(d, &x);
+	runtime_f64to32c(d, &x);
 	return x;
 }
 
@@ -70,7 +70,7 @@ f2d(uint32 f)
 {
 	uint64 x;
 
-	runtime·f32to64c(f, &x);
+	runtime_f32to64c(f, &x);
 	return x;
 }
 
@@ -114,7 +114,7 @@ stepflt(uint32 *pc, uint32 *regs)
 	i = *pc;
 
 	if(trace)
-		runtime·printf("stepflt %p %x (cpsr %x)\n", pc, i, regs[CPSR] >> 28);
+		runtime_printf("stepflt %p %x (cpsr %x)\n", pc, i, regs[CPSR] >> 28);
 
 	opc = i >> 28;
 	if(opc == 14) // common case first
@@ -153,7 +153,7 @@ stepflt(uint32 *pc, uint32 *regs)
 		return 0;
 	}
 	if(trace)
-		runtime·printf("conditional %x (cpsr %x) pass\n", opc, cpsr);
+		runtime_printf("conditional %x (cpsr %x) pass\n", opc, cpsr);
 	i = (0xeU << 28) | (i & 0xfffffff);
 
 execute:
@@ -167,7 +167,7 @@ execute:
 		regs[11] = addr[0];
 
 		if(trace)
-			runtime·printf("*** cpu R[%d] = *(%p) %x\n",
+			runtime_printf("*** cpu R[%d] = *(%p) %x\n",
 				11, addr, regs[11]);
 		return 1;
 	}
@@ -178,7 +178,7 @@ execute:
 		regs[11] += regs[13];
 
 		if(trace)
-			runtime·printf("*** cpu R[%d] += R[%d] %x\n",
+			runtime_printf("*** cpu R[%d] += R[%d] %x\n",
 				11, 13, regs[11]);
 		return 1;
 	}
@@ -186,7 +186,7 @@ execute:
 		regs[CPSR] = (regs[CPSR]&0x0fffffff) | m->fflag;
 
 		if(trace)
-			runtime·printf("*** fpsr R[CPSR] = F[CPSR] %x\n", regs[CPSR]);
+			runtime_printf("*** fpsr R[CPSR] = F[CPSR] %x\n", regs[CPSR]);
 		return 1;
 	}
 	if((i&0xff000000) == 0xea000000) {
@@ -198,7 +198,7 @@ execute:
 		delta = (delta<<8) >> 8;	// sign extend
 
 		if(trace)
-			runtime·printf("*** cpu PC += %x\n", (delta+2)*4);
+			runtime_printf("*** cpu PC += %x\n", (delta+2)*4);
 		return delta+2;
 	}
 
@@ -218,7 +218,7 @@ stage1:	// load/store regn is cpureg, regm is 8bit offset
 		m->freglo[regd] = addr[0];
 
 		if(trace)
-			runtime·printf("*** load F[%d] = %x\n",
+			runtime_printf("*** load F[%d] = %x\n",
 				regd, m->freglo[regd]);
 		break;
 
@@ -228,7 +228,7 @@ stage1:	// load/store regn is cpureg, regm is 8bit offset
 		m->freghi[regd] = addr[1];
 
 		if(trace)
-			runtime·printf("*** load D[%d] = %x-%x\n",
+			runtime_printf("*** load D[%d] = %x-%x\n",
 				regd, m->freghi[regd], m->freglo[regd]);
 		break;
 
@@ -237,7 +237,7 @@ stage1:	// load/store regn is cpureg, regm is 8bit offset
 		addr[0] = m->freglo[regd];
 
 		if(trace)
-			runtime·printf("*** *(%p) = %x\n",
+			runtime_printf("*** *(%p) = %x\n",
 				addr, addr[0]);
 		break;
 
@@ -247,7 +247,7 @@ stage1:	// load/store regn is cpureg, regm is 8bit offset
 		addr[1] = m->freghi[regd];
 
 		if(trace)
-			runtime·printf("*** *(%p) = %x-%x\n",
+			runtime_printf("*** *(%p) = %x-%x\n",
 				addr, addr[1], addr[0]);
 		break;
 	}
@@ -264,7 +264,7 @@ stage2:	// regd, regm, regn are 4bit variables
 		m->freghi[regd] = m->freghi[regm]^m->freghi[regn];
 
 		if(trace)
-			runtime·printf("*** veor D[%d] = %x-%x\n",
+			runtime_printf("*** veor D[%d] = %x-%x\n",
 				regd, m->freghi[regd], m->freglo[regd]);
 		break;
 
@@ -280,7 +280,7 @@ stage2:	// regd, regm, regn are 4bit variables
 		m->freghi[regd] = regm;
 
 		if(trace)
-			runtime·printf("*** immed D[%d] = %x-%x\n",
+			runtime_printf("*** immed D[%d] = %x-%x\n",
 				regd, m->freghi[regd], m->freglo[regd]);
 		break;
 
@@ -295,79 +295,79 @@ stage2:	// regd, regm, regn are 4bit variables
 		m->freglo[regd] = regm;
 
 		if(trace)
-			runtime·printf("*** immed D[%d] = %x\n",
+			runtime_printf("*** immed D[%d] = %x\n",
 				regd, m->freglo[regd]);
 		break;
 
 	case 0xee300b00:	// D[regd] = D[regn]+D[regm]
-		runtime·fadd64c(getd(regn), getd(regm), &uval);
+		runtime_fadd64c(getd(regn), getd(regm), &uval);
 		putd(regd, uval);
 
 		if(trace)
-			runtime·printf("*** add D[%d] = D[%d]+D[%d] %x-%x\n",
+			runtime_printf("*** add D[%d] = D[%d]+D[%d] %x-%x\n",
 				regd, regn, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xee300a00:	// F[regd] = F[regn]+F[regm]
-		runtime·fadd64c(f2d(m->freglo[regn]), f2d(m->freglo[regm]), &uval);
+		runtime_fadd64c(f2d(m->freglo[regn]), f2d(m->freglo[regm]), &uval);
 		m->freglo[regd] = d2f(uval);
 
 		if(trace)
-			runtime·printf("*** add F[%d] = F[%d]+F[%d] %x\n",
+			runtime_printf("*** add F[%d] = F[%d]+F[%d] %x\n",
 				regd, regn, regm, m->freglo[regd]);
 		break;
 
 	case 0xee300b40:	// D[regd] = D[regn]-D[regm]
-		runtime·fsub64c(getd(regn), getd(regm), &uval);
+		runtime_fsub64c(getd(regn), getd(regm), &uval);
 		putd(regd, uval);
 
 		if(trace)
-			runtime·printf("*** sub D[%d] = D[%d]-D[%d] %x-%x\n",
+			runtime_printf("*** sub D[%d] = D[%d]-D[%d] %x-%x\n",
 				regd, regn, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xee300a40:	// F[regd] = F[regn]-F[regm]
-		runtime·fsub64c(f2d(m->freglo[regn]), f2d(m->freglo[regm]), &uval);
+		runtime_fsub64c(f2d(m->freglo[regn]), f2d(m->freglo[regm]), &uval);
 		m->freglo[regd] = d2f(uval);
 
 		if(trace)
-			runtime·printf("*** sub F[%d] = F[%d]-F[%d] %x\n",
+			runtime_printf("*** sub F[%d] = F[%d]-F[%d] %x\n",
 				regd, regn, regm, m->freglo[regd]);
 		break;
 
 	case 0xee200b00:	// D[regd] = D[regn]*D[regm]
-		runtime·fmul64c(getd(regn), getd(regm), &uval);
+		runtime_fmul64c(getd(regn), getd(regm), &uval);
 		putd(regd, uval);
 
 		if(trace)
-			runtime·printf("*** mul D[%d] = D[%d]*D[%d] %x-%x\n",
+			runtime_printf("*** mul D[%d] = D[%d]*D[%d] %x-%x\n",
 				regd, regn, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xee200a00:	// F[regd] = F[regn]*F[regm]
-		runtime·fmul64c(f2d(m->freglo[regn]), f2d(m->freglo[regm]), &uval);
+		runtime_fmul64c(f2d(m->freglo[regn]), f2d(m->freglo[regm]), &uval);
 		m->freglo[regd] = d2f(uval);
 
 		if(trace)
-			runtime·printf("*** mul F[%d] = F[%d]*F[%d] %x\n",
+			runtime_printf("*** mul F[%d] = F[%d]*F[%d] %x\n",
 				regd, regn, regm, m->freglo[regd]);
 		break;
 
 	case 0xee800b00:	// D[regd] = D[regn]/D[regm]
-		runtime·fdiv64c(getd(regn), getd(regm), &uval);
+		runtime_fdiv64c(getd(regn), getd(regm), &uval);
 		putd(regd, uval);
 
 		if(trace)
-			runtime·printf("*** div D[%d] = D[%d]/D[%d] %x-%x\n",
+			runtime_printf("*** div D[%d] = D[%d]/D[%d] %x-%x\n",
 				regd, regn, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xee800a00:	// F[regd] = F[regn]/F[regm]
-		runtime·fdiv64c(f2d(m->freglo[regn]), f2d(m->freglo[regm]), &uval);
+		runtime_fdiv64c(f2d(m->freglo[regn]), f2d(m->freglo[regm]), &uval);
 		m->freglo[regd] = d2f(uval);
 
 		if(trace)
-			runtime·printf("*** div F[%d] = F[%d]/F[%d] %x\n",
+			runtime_printf("*** div F[%d] = F[%d]/F[%d] %x\n",
 				regd, regn, regm, m->freglo[regd]);
 		break;
 
@@ -375,7 +375,7 @@ stage2:	// regd, regm, regn are 4bit variables
 		m->freglo[regn] = regs[regd];
 
 		if(trace)
-			runtime·printf("*** cpy S[%d] = R[%d] %x\n",
+			runtime_printf("*** cpy S[%d] = R[%d] %x\n",
 				regn, regd, m->freglo[regn]);
 		break;
 
@@ -383,7 +383,7 @@ stage2:	// regd, regm, regn are 4bit variables
 		regs[regd] = m->freglo[regn];
 
 		if(trace)
-			runtime·printf("*** cpy R[%d] = S[%d] %x\n",
+			runtime_printf("*** cpy R[%d] = S[%d] %x\n",
 				regd, regn, regs[regd]);
 		break;
 	}
@@ -398,7 +398,7 @@ stage3:	// regd, regm are 4bit variables
 		m->freglo[regd] = m->freglo[regm];
 
 		if(trace)
-			runtime·printf("*** F[%d] = F[%d] %x\n",
+			runtime_printf("*** F[%d] = F[%d] %x\n",
 				regd, regm, m->freglo[regd]);
 		break;
 
@@ -407,34 +407,34 @@ stage3:	// regd, regm are 4bit variables
 		m->freghi[regd] = m->freghi[regm];
 
 		if(trace)
-			runtime·printf("*** D[%d] = D[%d] %x-%x\n",
+			runtime_printf("*** D[%d] = D[%d] %x-%x\n",
 				regd, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xeeb10bc0:	// D[regd] = sqrt D[regm]
-		math·sqrtC(getd(regm), &uval);
+		math_sqrtC(getd(regm), &uval);
 		putd(regd, uval);
 
 		if(trace)
-			runtime·printf("*** D[%d] = sqrt D[%d] %x-%x\n",
+			runtime_printf("*** D[%d] = sqrt D[%d] %x-%x\n",
 				regd, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xeeb40bc0:	// D[regd] :: D[regm] (CMPD)
-		runtime·fcmp64c(getd(regd), getd(regm), &cmp, &nan);
+		runtime_fcmp64c(getd(regd), getd(regm), &cmp, &nan);
 		m->fflag = fstatus(nan, cmp);
 
 		if(trace)
-			runtime·printf("*** cmp D[%d]::D[%d] %x\n",
+			runtime_printf("*** cmp D[%d]::D[%d] %x\n",
 				regd, regm, m->fflag);
 		break;
 
 	case 0xeeb40ac0:	// F[regd] :: F[regm] (CMPF)
-		runtime·fcmp64c(f2d(m->freglo[regd]), f2d(m->freglo[regm]), &cmp, &nan);
+		runtime_fcmp64c(f2d(m->freglo[regd]), f2d(m->freglo[regm]), &cmp, &nan);
 		m->fflag = fstatus(nan, cmp);
 
 		if(trace)
-			runtime·printf("*** cmp F[%d]::F[%d] %x\n",
+			runtime_printf("*** cmp F[%d]::F[%d] %x\n",
 				regd, regm, m->fflag);
 		break;
 
@@ -442,7 +442,7 @@ stage3:	// regd, regm are 4bit variables
 		putd(regd, f2d(m->freglo[regm]));
 
 		if(trace)
-			runtime·printf("*** f2d D[%d]=F[%d] %x-%x\n",
+			runtime_printf("*** f2d D[%d]=F[%d] %x-%x\n",
 				regd, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
@@ -450,101 +450,101 @@ stage3:	// regd, regm are 4bit variables
 		m->freglo[regd] = d2f(getd(regm));
 
 		if(trace)
-			runtime·printf("*** d2f F[%d]=D[%d] %x-%x\n",
+			runtime_printf("*** d2f F[%d]=D[%d] %x-%x\n",
 				regd, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xeebd0ac0:	// S[regd] = F[regm] (MOVFW)
-		runtime·f64tointc(f2d(m->freglo[regm]), &sval, &ok);
+		runtime_f64tointc(f2d(m->freglo[regm]), &sval, &ok);
 		if(!ok || (int32)sval != sval)
 			sval = 0;
 		m->freglo[regd] = sval;
 
 		if(trace)
-			runtime·printf("*** fix S[%d]=F[%d] %x\n",
+			runtime_printf("*** fix S[%d]=F[%d] %x\n",
 				regd, regm, m->freglo[regd]);
 		break;
 
 	case 0xeebc0ac0:	// S[regd] = F[regm] (MOVFW.U)
-		runtime·f64tointc(f2d(m->freglo[regm]), &sval, &ok);
+		runtime_f64tointc(f2d(m->freglo[regm]), &sval, &ok);
 		if(!ok || (uint32)sval != sval)
 			sval = 0;
 		m->freglo[regd] = sval;
 
 		if(trace)
-			runtime·printf("*** fix unsigned S[%d]=F[%d] %x\n",
+			runtime_printf("*** fix unsigned S[%d]=F[%d] %x\n",
 				regd, regm, m->freglo[regd]);
 		break;
 
 	case 0xeebd0bc0:	// S[regd] = D[regm] (MOVDW)
-		runtime·f64tointc(getd(regm), &sval, &ok);
+		runtime_f64tointc(getd(regm), &sval, &ok);
 		if(!ok || (int32)sval != sval)
 			sval = 0;
 		m->freglo[regd] = sval;
 
 		if(trace)
-			runtime·printf("*** fix S[%d]=D[%d] %x\n",
+			runtime_printf("*** fix S[%d]=D[%d] %x\n",
 				regd, regm, m->freglo[regd]);
 		break;
 
 	case 0xeebc0bc0:	// S[regd] = D[regm] (MOVDW.U)
-		runtime·f64tointc(getd(regm), &sval, &ok);
+		runtime_f64tointc(getd(regm), &sval, &ok);
 		if(!ok || (uint32)sval != sval)
 			sval = 0;
 		m->freglo[regd] = sval;
 
 		if(trace)
-			runtime·printf("*** fix unsigned S[%d]=D[%d] %x\n",
+			runtime_printf("*** fix unsigned S[%d]=D[%d] %x\n",
 				regd, regm, m->freglo[regd]);
 		break;
 
 	case 0xeeb80ac0:	// D[regd] = S[regm] (MOVWF)
 		cmp = m->freglo[regm];
 		if(cmp < 0) {
-			runtime·fintto64c(-cmp, &uval);
+			runtime_fintto64c(-cmp, &uval);
 			putf(regd, d2f(uval));
 			m->freglo[regd] ^= 0x80000000;
 		} else {
-			runtime·fintto64c(cmp, &uval);
+			runtime_fintto64c(cmp, &uval);
 			putf(regd, d2f(uval));
 		}
 
 		if(trace)
-			runtime·printf("*** float D[%d]=S[%d] %x-%x\n",
+			runtime_printf("*** float D[%d]=S[%d] %x-%x\n",
 				regd, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xeeb80a40:	// D[regd] = S[regm] (MOVWF.U)
-		runtime·fintto64c(m->freglo[regm], &uval);
+		runtime_fintto64c(m->freglo[regm], &uval);
 		putf(regd, d2f(uval));
 
 		if(trace)
-			runtime·printf("*** float unsigned D[%d]=S[%d] %x-%x\n",
+			runtime_printf("*** float unsigned D[%d]=S[%d] %x-%x\n",
 				regd, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xeeb80bc0:	// D[regd] = S[regm] (MOVWD)
 		cmp = m->freglo[regm];
 		if(cmp < 0) {
-			runtime·fintto64c(-cmp, &uval);
+			runtime_fintto64c(-cmp, &uval);
 			putd(regd, uval);
 			m->freghi[regd] ^= 0x80000000;
 		} else {
-			runtime·fintto64c(cmp, &uval);
+			runtime_fintto64c(cmp, &uval);
 			putd(regd, uval);
 		}
 
 		if(trace)
-			runtime·printf("*** float D[%d]=S[%d] %x-%x\n",
+			runtime_printf("*** float D[%d]=S[%d] %x-%x\n",
 				regd, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 
 	case 0xeeb80b40:	// D[regd] = S[regm] (MOVWD.U)
-		runtime·fintto64c(m->freglo[regm], &uval);
+		runtime_fintto64c(m->freglo[regm], &uval);
 		putd(regd, uval);
 
 		if(trace)
-			runtime·printf("*** float unsigned D[%d]=S[%d] %x-%x\n",
+			runtime_printf("*** float unsigned D[%d]=S[%d] %x-%x\n",
 				regd, regm, m->freghi[regd], m->freglo[regd]);
 		break;
 	}
@@ -553,7 +553,7 @@ stage3:	// regd, regm are 4bit variables
 done:
 	if((i&0xff000000) == 0xee000000 ||
 	   (i&0xff000000) == 0xed000000) {
-		runtime·printf("stepflt %p %x\n", pc, i);
+		runtime_printf("stepflt %p %x\n", pc, i);
 		fabort();
 	}
 	return 0;
@@ -561,13 +561,13 @@ done:
 
 #pragma textflag 7
 uint32*
-runtime·_sfloat2(uint32 *lr, uint32 r0)
+runtime__sfloat2(uint32 *lr, uint32 r0)
 {
 	uint32 skip;
 
 	skip = stepflt(lr, &r0);
 	if(skip == 0) {
-		runtime·printf("sfloat2 %p %x\n", lr, *lr);
+		runtime_printf("sfloat2 %p %x\n", lr, *lr);
 		fabort(); // not ok to fail first instruction
 	}
 
