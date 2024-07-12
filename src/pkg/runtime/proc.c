@@ -51,7 +51,7 @@ int32	runtime_gcwaiting;
 // Linux and OS X.
 
 struct Sched {
-	Lock;
+	Lock l;
 
 	G *gfree;	// available g's (status == Gdead)
 	int32 goidgen;

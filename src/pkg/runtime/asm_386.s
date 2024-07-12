@@ -15,7 +15,7 @@ TEXT _rt0_386(SB),7,$0
 
 	// set default stack bounds.
 	// initcgo may update stackguard.
-	MOVL	$runtime·g0(SB), BP
+	MOVL	$runtime_g0(SB), BP
 	LEAL	(-64*1024+104)(SP), BX
 	MOVL	BX, g_stackguard(BP)
 	MOVL	SP, g_stackbase(BP)
@@ -29,69 +29,69 @@ TEXT _rt0_386(SB),7,$0
 	PUSHL	BP
 	CALL	AX
 	POPL	BP
-	// skip runtime·ldt0setup(SB) and tls test after initcgo for non-windows
-	CMPL runtime·iswindows(SB), $0
+	// skip runtime_ldt0setup(SB) and tls test after initcgo for non-windows
+	CMPL runtime_iswindows(SB), $0
 	JEQ ok
 needtls:
-	// skip runtime·ldt0setup(SB) and tls test on Plan 9 in all cases
-	CMPL	runtime·isplan9(SB), $1
+	// skip runtime_ldt0setup(SB) and tls test on Plan 9 in all cases
+	CMPL	runtime_isplan9(SB), $1
 	JEQ	ok
 
 	// set up %gs
-	CALL	runtime·ldt0setup(SB)
+	CALL	runtime_ldt0setup(SB)
 
 	// store through it, to make sure it works
 	get_tls(BX)
 	MOVL	$0x123, g(BX)
-	MOVL	runtime·tls0(SB), AX
+	MOVL	runtime_tls0(SB), AX
 	CMPL	AX, $0x123
 	JEQ	ok
 	MOVL	AX, 0	// abort
 ok:
 	// set up m and g "registers"
 	get_tls(BX)
-	LEAL	runtime·g0(SB), CX
+	LEAL	runtime_g0(SB), CX
 	MOVL	CX, g(BX)
-	LEAL	runtime·m0(SB), AX
+	LEAL	runtime_m0(SB), AX
 	MOVL	AX, m(BX)
 
 	// save m->g0 = g0
 	MOVL	CX, m_g0(AX)
 
-	CALL	runtime·emptyfunc(SB)	// fault if stack check is wrong
+	CALL	runtime_emptyfunc(SB)	// fault if stack check is wrong
 
 	// convention is D is always cleared
 	CLD
 
-	CALL	runtime·check(SB)
+	CALL	runtime_check(SB)
 
 	// saved argc, argv
 	MOVL	120(SP), AX
 	MOVL	AX, 0(SP)
 	MOVL	124(SP), AX
 	MOVL	AX, 4(SP)
-	CALL	runtime·args(SB)
-	CALL	runtime·osinit(SB)
-	CALL	runtime·schedinit(SB)
+	CALL	runtime_args(SB)
+	CALL	runtime_osinit(SB)
+	CALL	runtime_schedinit(SB)
 
 	// create a new goroutine to start program
-	PUSHL	$runtime·main(SB)	// entry
+	PUSHL	$runtime_main(SB)	// entry
 	PUSHL	$0	// arg size
-	CALL	runtime·newproc(SB)
+	CALL	runtime_newproc(SB)
 	POPL	AX
 	POPL	AX
 
 	// start this M
-	CALL	runtime·mstart(SB)
+	CALL	runtime_mstart(SB)
 
 	INT $3
 	RET
 
-TEXT runtime·breakpoint(SB),7,$0
+TEXT runtime_breakpoint(SB),7,$0
 	INT $3
 	RET
 
-TEXT runtime·asminit(SB),7,$0
+TEXT runtime_asminit(SB),7,$0
 	// Linux, Windows start the FPU in extended double precision.
 	// Other operating systems use double precision.
 	// Change to double precision to match them,
@@ -107,7 +107,7 @@ TEXT runtime·asminit(SB),7,$0
 
 // void gosave(Gobuf*)
 // save state in Gobuf; setjmp
-TEXT runtime·gosave(SB), 7, $0
+TEXT runtime_gosave(SB), 7, $0
 	MOVL	4(SP), AX		// gobuf
 	LEAL	4(SP), BX		// caller's SP
 	MOVL	BX, gobuf_sp(AX)
@@ -120,7 +120,7 @@ TEXT runtime·gosave(SB), 7, $0
 
 // void gogo(Gobuf*, uintptr)
 // restore state from Gobuf; longjmp
-TEXT runtime·gogo(SB), 7, $0
+TEXT runtime_gogo(SB), 7, $0
 	MOVL	8(SP), AX		// return 2nd arg
 	MOVL	4(SP), BX		// gobuf
 	MOVL	gobuf_g(BX), DX
@@ -134,7 +134,7 @@ TEXT runtime·gogo(SB), 7, $0
 // void gogocall(Gobuf*, void (*fn)(void))
 // restore state from Gobuf but then call fn.
 // (call fn, returning to state in Gobuf)
-TEXT runtime·gogocall(SB), 7, $0
+TEXT runtime_gogocall(SB), 7, $0
 	MOVL	8(SP), AX		// fn
 	MOVL	4(SP), BX		// gobuf
 	MOVL	gobuf_g(BX), DX
@@ -151,7 +151,7 @@ TEXT runtime·gogocall(SB), 7, $0
 // Switch to m->g0's stack, call fn(g).
 // Fn must never return.  It should gogo(&g->sched)
 // to keep running g.
-TEXT runtime·mcall(SB), 7, $0
+TEXT runtime_mcall(SB), 7, $0
 	MOVL	fn+0(FP), DI
 	
 	get_tls(CX)
@@ -167,13 +167,13 @@ TEXT runtime·mcall(SB), 7, $0
 	MOVL	m_g0(BX), SI
 	CMPL	SI, AX	// if g == m->g0 call badmcall
 	JNE	2(PC)
-	CALL	runtime·badmcall(SB)
+	CALL	runtime_badmcall(SB)
 	MOVL	SI, g(CX)	// g = m->g0
 	MOVL	(g_sched+gobuf_sp)(SI), SP	// sp = m->g0->gobuf.sp
 	PUSHL	AX
 	CALL	DI
 	POPL	AX
-	CALL	runtime·badmcall2(SB)
+	CALL	runtime_badmcall2(SB)
 	RET
 
 /*
@@ -181,7 +181,7 @@ TEXT runtime·mcall(SB), 7, $0
  */
 
 // Called during function prolog when more stack is needed.
-TEXT runtime·morestack(SB),7,$0
+TEXT runtime_morestack(SB),7,$0
 	// Cannot grow scheduler stack (m->g0).
 	get_tls(CX)
 	MOVL	m(CX), BX
@@ -217,7 +217,7 @@ TEXT runtime·morestack(SB),7,$0
 	MOVL	(g_sched+gobuf_sp)(BP), AX
 	MOVL	-4(AX), BX	// fault if CALL would, before smashing SP
 	MOVL	AX, SP
-	CALL	runtime·newstack(SB)
+	CALL	runtime_newstack(SB)
 	MOVL	$0, 0x1003	// crash if newstack returns
 	RET
 
@@ -226,7 +226,7 @@ TEXT runtime·morestack(SB),7,$0
 // with the desired args running the desired function.
 //
 // func call(fn *byte, arg *byte, argsize uint32).
-TEXT reflect·call(SB), 7, $0
+TEXT reflect_call(SB), 7, $0
 	get_tls(CX)
 	MOVL	m(CX), BX
 
@@ -241,7 +241,7 @@ TEXT reflect·call(SB), 7, $0
 
 	// Set up morestack arguments to call f on a new stack.
 	// We set f's frame size to 1, as a hint to newstack
-	// that this is a call from reflect·call.
+	// that this is a call from reflect_call.
 	// If it turns out that f needs a larger frame than
 	// the default stack, f's usual stack growth prolog will
 	// allocate a new segment (and recopy the arguments).
@@ -259,13 +259,13 @@ TEXT reflect·call(SB), 7, $0
 	get_tls(CX)
 	MOVL	BP, g(CX)
 	MOVL	(g_sched+gobuf_sp)(BP), SP
-	CALL	runtime·newstack(SB)
+	CALL	runtime_newstack(SB)
 	MOVL	$0, 0x1103	// crash if newstack returns
 	RET
 
 
 // Return point when leaving stack.
-TEXT runtime·lessstack(SB), 7, $0
+TEXT runtime_lessstack(SB), 7, $0
 	// Save return value in m->cret
 	get_tls(CX)
 	MOVL	m(CX), BX
@@ -275,7 +275,7 @@ TEXT runtime·lessstack(SB), 7, $0
 	MOVL	m_g0(BX), BP
 	MOVL	BP, g(CX)
 	MOVL	(g_sched+gobuf_sp)(BP), SP
-	CALL	runtime·oldstack(SB)
+	CALL	runtime_oldstack(SB)
 	MOVL	$0, 0x1004	// crash if oldstack returns
 	RET
 
@@ -287,7 +287,7 @@ TEXT runtime·lessstack(SB), 7, $0
 //		return 1;
 //	}else
 //		return 0;
-TEXT runtime·cas(SB), 7, $0
+TEXT runtime_cas(SB), 7, $0
 	MOVL	4(SP), BX
 	MOVL	8(SP), AX
 	MOVL	12(SP), CX
@@ -306,7 +306,7 @@ TEXT runtime·cas(SB), 7, $0
 //		return 1;
 //	}else
 //		return 0;
-TEXT runtime·casp(SB), 7, $0
+TEXT runtime_casp(SB), 7, $0
 	MOVL	4(SP), BX
 	MOVL	8(SP), AX
 	MOVL	12(SP), CX
@@ -322,7 +322,7 @@ TEXT runtime·casp(SB), 7, $0
 // Atomically:
 //	*val += delta;
 //	return *val;
-TEXT runtime·xadd(SB), 7, $0
+TEXT runtime_xadd(SB), 7, $0
 	MOVL	4(SP), BX
 	MOVL	8(SP), AX
 	MOVL	AX, CX
@@ -331,13 +331,13 @@ TEXT runtime·xadd(SB), 7, $0
 	ADDL	CX, AX
 	RET
 
-TEXT runtime·xchg(SB), 7, $0
+TEXT runtime_xchg(SB), 7, $0
 	MOVL	4(SP), BX
 	MOVL	8(SP), AX
 	XCHGL	AX, 0(BX)
 	RET
 
-TEXT runtime·procyield(SB),7,$0
+TEXT runtime_procyield(SB),7,$0
 	MOVL	4(SP), AX
 again:
 	PAUSE
@@ -345,13 +345,13 @@ again:
 	JNZ	again
 	RET
 
-TEXT runtime·atomicstorep(SB), 7, $0
+TEXT runtime_atomicstorep(SB), 7, $0
 	MOVL	4(SP), BX
 	MOVL	8(SP), AX
 	XCHGL	AX, 0(BX)
 	RET
 
-TEXT runtime·atomicstore(SB), 7, $0
+TEXT runtime_atomicstore(SB), 7, $0
 	MOVL	4(SP), BX
 	MOVL	8(SP), AX
 	XCHGL	AX, 0(BX)
@@ -362,7 +362,7 @@ TEXT runtime·atomicstore(SB), 7, $0
 // 1. pop the caller
 // 2. sub 5 bytes from the callers return
 // 3. jmp to the argument
-TEXT runtime·jmpdefer(SB), 7, $0
+TEXT runtime_jmpdefer(SB), 7, $0
 	MOVL	4(SP), AX	// fn
 	MOVL	8(SP), BX	// caller sp
 	LEAL	-4(BX), SP	// caller sp after CALL
@@ -380,7 +380,7 @@ TEXT return<>(SB),7,$0
 // Call fn(arg) on the scheduler stack,
 // aligned appropriately for the gcc ABI.
 // See cgocall.c for more details.
-TEXT runtime·asmcgocall(SB),7,$0
+TEXT runtime_asmcgocall(SB),7,$0
 	MOVL	fn+0(FP), AX
 	MOVL	arg+4(FP), BX
 	MOVL	SP, DX
@@ -417,7 +417,7 @@ TEXT runtime·asmcgocall(SB),7,$0
 
 // cgocallback(void (*fn)(void*), void *frame, uintptr framesize)
 // See cgocall.c for more details.
-TEXT runtime·cgocallback(SB),7,$12
+TEXT runtime_cgocallback(SB),7,$12
 	MOVL	fn+0(FP), AX
 	MOVL	frame+4(FP), BX
 	MOVL	framesize+8(FP), DX
@@ -431,7 +431,7 @@ TEXT runtime·cgocallback(SB),7,$12
 	// soon as we try to use m; instead, try to print a nice error and exit.
 	CMPL	BP, $0
 	JNE 2(PC)
-	CALL	runtime·badcallback(SB)
+	CALL	runtime_badcallback(SB)
 
 	MOVL	m_g0(BP), SI
 	PUSHL	(g_sched+gobuf_sp)(SI)
@@ -470,7 +470,7 @@ TEXT runtime·cgocallback(SB),7,$12
 	
 	// Switch stack and make the call.
 	MOVL	DI, SP
-	CALL	runtime·cgocallbackg(SB)
+	CALL	runtime_cgocallbackg(SB)
 
 	// Restore g->gobuf (== m->curg->gobuf) from saved values.
 	get_tls(CX)
@@ -493,7 +493,7 @@ TEXT runtime·cgocallback(SB),7,$12
 	RET
 
 // check that SP is in range [g->stackbase, g->stackguard)
-TEXT runtime·stackcheck(SB), 7, $0
+TEXT runtime_stackcheck(SB), 7, $0
 	get_tls(CX)
 	MOVL	g(CX), AX
 	CMPL	g_stackbase(AX), SP
@@ -504,7 +504,7 @@ TEXT runtime·stackcheck(SB), 7, $0
 	INT	$3
 	RET
 
-TEXT runtime·memclr(SB),7,$0
+TEXT runtime_memclr(SB),7,$0
 	MOVL	4(SP), DI		// arg 1 addr
 	MOVL	8(SP), CX		// arg 2 count
 	MOVL	CX, BX
@@ -519,48 +519,48 @@ TEXT runtime·memclr(SB),7,$0
 	STOSB
 	RET
 
-TEXT runtime·getcallerpc(SB),7,$0
+TEXT runtime_getcallerpc(SB),7,$0
 	MOVL	x+0(FP),AX		// addr of first arg
 	MOVL	-4(AX),AX		// get calling pc
 	RET
 
-TEXT runtime·setcallerpc(SB),7,$0
+TEXT runtime_setcallerpc(SB),7,$0
 	MOVL	x+0(FP),AX		// addr of first arg
 	MOVL	x+4(FP), BX
 	MOVL	BX, -4(AX)		// set calling pc
 	RET
 
-TEXT runtime·getcallersp(SB), 7, $0
+TEXT runtime_getcallersp(SB), 7, $0
 	MOVL	sp+0(FP), AX
 	RET
 
-// int64 runtime·cputicks(void), so really
-// void runtime·cputicks(int64 *ticks)
-TEXT runtime·cputicks(SB),7,$0
+// int64 runtime_cputicks(void), so really
+// void runtime_cputicks(int64 *ticks)
+TEXT runtime_cputicks(SB),7,$0
 	RDTSC
 	MOVL	ret+0(FP), DI
 	MOVL	AX, 0(DI)
 	MOVL	DX, 4(DI)
 	RET
 
-TEXT runtime·ldt0setup(SB),7,$16
+TEXT runtime_ldt0setup(SB),7,$16
 	// set up ldt 7 to point at tls0
 	// ldt 1 would be fine on Linux, but on OS X, 7 is as low as we can go.
 	// the entry number is just a hint.  setldt will set up GS with what it used.
 	MOVL	$7, 0(SP)
-	LEAL	runtime·tls0(SB), AX
+	LEAL	runtime_tls0(SB), AX
 	MOVL	AX, 4(SP)
 	MOVL	$32, 8(SP)	// sizeof(tls array)
-	CALL	runtime·setldt(SB)
+	CALL	runtime_setldt(SB)
 	RET
 
-TEXT runtime·emptyfunc(SB),0,$0
+TEXT runtime_emptyfunc(SB),0,$0
 	RET
 
-TEXT runtime·abort(SB),7,$0
+TEXT runtime_abort(SB),7,$0
 	INT $0x3
 
-TEXT runtime·stackguard(SB),7,$0
+TEXT runtime_stackguard(SB),7,$0
 	MOVL	SP, DX
 	MOVL	DX, sp+0(FP)
 	get_tls(CX)
@@ -569,4 +569,4 @@ TEXT runtime·stackguard(SB),7,$0
 	MOVL	DX, guard+4(FP)
 	RET
 
-GLOBL runtime·tls0(SB), $32
+GLOBL runtime_tls0(SB), $32

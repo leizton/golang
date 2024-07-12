@@ -7,8 +7,9 @@ set(CMAKE_CXX_COMPILER "/usr/local/Cellar/gcc/14.1.0/bin/gcc-14")
 
 project(golang)
 
-file(GLOB golang_src 
+file(GLOB golang_src
         "src/pkg/*/*.c"
+        "src/pkg/*/*/*.c"
 )
 
-add_executable(golang_bin ${golang_src})
+add_library(golang_lib STATIC ${golang_src})
