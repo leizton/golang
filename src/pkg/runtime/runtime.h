@@ -87,8 +87,8 @@ typedef	struct	Timer		Timer;
  * so that the C compiler knows to avoid other uses of these registers.
  * the Go compilers know to avoid them.
  */
-extern	register	G*	g;
-extern	register	M*	m;
+extern register G* g;
+extern register M* m;
 
 /*
  * defined constants
