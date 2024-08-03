@@ -242,8 +242,7 @@ void runtime_main(void) {
 }
 
 // Lock the scheduler.
-static void
-schedlock(void) {
+static void schedlock(void) {
   runtime_lock(&runtime_sched);
 }
 
@@ -792,8 +791,7 @@ M* runtime_newm(void) {
 // The argument is the goroutine that was running before
 // schedule was called, or nil if this is the first call.
 // Never returns.
-static void
-schedule(G* gp) {
+static void schedule(G* gp) {
   int32 hz;
   uint32 v;
 

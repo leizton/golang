@@ -32,9 +32,7 @@ enum
 // MUTEX_SLEEPING means that there is presumably at least one sleeping thread.
 // Note that there can be spinning threads during all states - they do not
 // affect mutex's state.
-void
-runtime_lock(Lock *l)
-{
+void runtime_lock(Lock *l) {
 	uint32 i, v, wait, spin;
 
 	if(m->locks++ < 0)
